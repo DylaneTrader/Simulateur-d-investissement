@@ -404,7 +404,7 @@ R : Les calculs sont basés sur des formules financières standard. Cependant, c
 R : Actuellement, l'application est configurée pour des versements mensuels. Pour d'autres fréquences, vous devrez adapter les fonctions dans `core/calculations.py`.
 
 **Q : Comment signaler un bug ou suggérer une fonctionnalité ?**
-R : Contactez le développeur ou ouvrez une issue sur le repository GitHub du projet.
+R : Contactez directement le développeur (voir section Contact et Support ci-dessous) pour signaler un bug ou suggérer des améliorations.
 
 ## Technologies Utilisées
 
@@ -427,7 +427,9 @@ Pour toute question concernant l'utilisation ou la distribution de ce logiciel, 
 
 **Organisation** : CGF GESTION
 
-Pour toute question, suggestion ou problème technique, n'hésitez pas à contacter le développeur.
+Pour toute question, suggestion ou problème technique concernant l'application, veuillez contacter :
+- Le développeur via les canaux de communication internes de CGF GESTION
+- Le service informatique de CGF GESTION pour le support technique
 
 ## Remerciements
 
