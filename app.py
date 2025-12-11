@@ -13,7 +13,8 @@ try:
     from dotenv import load_dotenv
     load_dotenv()
 except ImportError:
-    pass  # python-dotenv n'est pas installé, utiliser les variables système
+    # python-dotenv n'est pas installé, les variables système seront utilisées
+    pass
 
 # Configuration de la page principale
 st.set_page_config(
