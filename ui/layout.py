@@ -124,6 +124,44 @@ def display_results(inputs: dict, calculation_mode: str):
     with col4:
         _display_metric_card("Horizon", f"{n_years} ans", "⏱️", ACCENT_COLOR)
     
+    # Affichage des équivalents du versement mensuel
+    if pmt > 0:
+        pmt_quarterly = pmt * 3
+        pmt_semester = pmt * 6
+        pmt_yearly = pmt * 12
+        
+        st.markdown(
+            f"""
+            <div style="
+                background: linear-gradient(135deg, {PRIMARY_COLOR}10 0%, {PRIMARY_COLOR}05 100%);
+                border-left: 3px solid {PRIMARY_COLOR};
+                border-radius: 8px;
+                padding: 12px 20px;
+                margin: 15px 0;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+            ">
+                <div style="color: {PRIMARY_COLOR}; font-size: 14px; font-weight: 600; margin-bottom: 8px;">
+                    💳 Équivalents du versement mensuel
+                </div>
+                <div style="display: flex; justify-content: space-around; flex-wrap: wrap; gap: 10px;">
+                    <div style="text-align: center;">
+                        <div style="color: #666; font-size: 11px; font-weight: 500;">Trimestriel</div>
+                        <div style="color: {PRIMARY_COLOR}; font-size: 15px; font-weight: 700;">{fmt_money(pmt_quarterly)}</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="color: #666; font-size: 11px; font-weight: 500;">Semestriel</div>
+                        <div style="color: {PRIMARY_COLOR}; font-size: 15px; font-weight: 700;">{fmt_money(pmt_semester)}</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="color: #666; font-size: 11px; font-weight: 500;">Annuel</div>
+                        <div style="color: {PRIMARY_COLOR}; font-size: 15px; font-weight: 700;">{fmt_money(pmt_yearly)}</div>
+                    </div>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+    
     st.markdown("<br>", unsafe_allow_html=True)
     
     # Deuxième ligne : Résultats financiers en cartes

@@ -7,6 +7,7 @@
 
 import io
 import base64
+import os
 from datetime import datetime
 from reportlab.lib.pagesizes import A4, letter
 from reportlab.lib.units import cm
@@ -22,6 +23,114 @@ matplotlib.use('Agg')  # Use non-interactive backend
 
 from core.utils import fmt_money
 from core.config import PRIMARY_COLOR, SECONDARY_COLOR, APP_NAME
+
+
+def _create_portfolio_evolution_chart(pv, pmt, rate, n_years):
+    """
+    Crée le graphique d'évolution du portefeuille pour le PDF.
+    
+    Returns:
+        io.BytesIO: Buffer contenant l'image du graphique
+    """
+    # Générer les données mensuelles
+    months = int(n_years * 12)
+    rate_m = rate / 100 / 12
+    
+    data = []
+    value = pv
+    capital = pv
+    
+    data.append({
+        "Mois": 0,
+        "Année": 0,
+        "Valeur Totale": pv,
+        "Capital Investi": pv,
+    })
+    
+    for m in range(1, months + 1):
+        value = value * (1 + rate_m) + pmt
+        capital += pmt
+        
+        data.append({
+            "Mois": m,
+            "Année": m / 12,
+            "Valeur Totale": value,
+            "Capital Investi": capital,
+        })
+    
+    df = pd.DataFrame(data)
+    
+    # Créer le graphique avec matplotlib
+    fig, ax = plt.subplots(figsize=(10, 5))
+    
+    ax.plot(df["Année"], df["Valeur Totale"], 
+            color=PRIMARY_COLOR, linewidth=2.5, label="Valeur Totale")
+    ax.plot(df["Année"], df["Capital Investi"], 
+            color=SECONDARY_COLOR, linewidth=2, linestyle='--', label="Capital Investi")
+    
+    ax.set_xlabel("Horizon (années)", fontsize=11, fontweight='bold')
+    ax.set_ylabel("Montant (FCFA)", fontsize=11, fontweight='bold')
+    ax.set_title("Évolution du Portefeuille", fontsize=14, fontweight='bold', color=PRIMARY_COLOR)
+    ax.legend(loc='upper left', fontsize=10)
+    ax.grid(True, alpha=0.3)
+    
+    # Formater l'axe Y
+    ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'{int(x):,}'))
+    
+    plt.tight_layout()
+    
+    # Sauvegarder dans un buffer
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png', dpi=150, bbox_inches='tight')
+    buf.seek(0)
+    plt.close(fig)
+    
+    return buf
+
+
+def _create_pie_chart(total_invested, total_interest):
+    """
+    Crée le graphique en camembert de distribution du capital pour le PDF.
+    
+    Returns:
+        io.BytesIO: Buffer contenant l'image du graphique
+    """
+    fig, ax = plt.subplots(figsize=(7, 5))
+    
+    labels = ['Capital Investi', 'Intérêts Générés']
+    sizes = [total_invested, total_interest]
+    colors_pie = [SECONDARY_COLOR, PRIMARY_COLOR]
+    explode = (0.05, 0.05)  # Légère séparation des parts
+    
+    # Créer le camembert
+    wedges, texts, autotexts = ax.pie(
+        sizes, 
+        explode=explode, 
+        labels=labels, 
+        colors=colors_pie,
+        autopct='%1.1f%%',
+        startangle=90,
+        textprops={'fontsize': 11, 'fontweight': 'bold'}
+    )
+    
+    # Améliorer la lisibilité des pourcentages
+    for autotext in autotexts:
+        autotext.set_color('white')
+        autotext.set_fontsize(12)
+        autotext.set_fontweight('bold')
+    
+    ax.set_title("Distribution du Capital Estimé", fontsize=14, fontweight='bold', color=PRIMARY_COLOR, pad=20)
+    ax.axis('equal')
+    
+    plt.tight_layout()
+    
+    # Sauvegarder dans un buffer
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png', dpi=150, bbox_inches='tight')
+    buf.seek(0)
+    plt.close(fig)
+    
+    return buf
 
 
 def create_pdf_report(inputs: dict, results: dict, commercial_info: dict = None):
@@ -72,6 +181,19 @@ def create_pdf_report(inputs: dict, results: dict, commercial_info: dict = None)
     )
     
     normal_style = styles['Normal']
+    
+    # Logo en-tête
+    logo_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'assets', 'logo.png')
+    if os.path.exists(logo_path):
+        try:
+            logo = Image(logo_path, width=4*cm, height=4*cm, kind='proportional')
+            logo.hAlign = 'CENTER'
+            elements.append(logo)
+            elements.append(Spacer(1, 0.3*cm))
+        except Exception as e:
+            # Si le logo ne peut pas être chargé, on continue sans
+            # Le PDF sera généré sans logo mais avec tout le reste
+            pass
     
     # En-tête
     elements.append(Paragraph("CGF GESTION", title_style))
@@ -191,6 +313,37 @@ def create_pdf_report(inputs: dict, results: dict, commercial_info: dict = None)
     elements.append(Paragraph(analysis_text, normal_style))
     elements.append(Spacer(1, 1*cm))
     
+    # Graphiques
+    elements.append(PageBreak())
+    elements.append(Paragraph("Visualisations", heading_style))
+    elements.append(Spacer(1, 0.5*cm))
+    
+    # Graphique 1: Évolution du portefeuille
+    try:
+        chart_buffer = _create_portfolio_evolution_chart(
+            inputs.get('pv', 0),
+            inputs.get('pmt', 0),
+            inputs.get('rate', 0),
+            inputs.get('n_years', 0)
+        )
+        chart_img = Image(chart_buffer, width=16*cm, height=8*cm)
+        elements.append(chart_img)
+        elements.append(Spacer(1, 1*cm))
+    except Exception as e:
+        elements.append(Paragraph(f"<i>Erreur lors de la génération du graphique d'évolution: {str(e)}</i>", normal_style))
+        elements.append(Spacer(1, 0.5*cm))
+    
+    # Graphique 2: Distribution du capital (pie chart)
+    try:
+        pie_buffer = _create_pie_chart(total_invested, total_interest)
+        pie_img = Image(pie_buffer, width=12*cm, height=8*cm)
+        pie_img.hAlign = 'CENTER'
+        elements.append(pie_img)
+        elements.append(Spacer(1, 1*cm))
+    except Exception as e:
+        elements.append(Paragraph(f"<i>Erreur lors de la génération du graphique de distribution: {str(e)}</i>", normal_style))
+        elements.append(Spacer(1, 0.5*cm))
+    
     # Pied de page
     elements.append(Spacer(1, 2*cm))
     elements.append(Paragraph("<hr width='100%'/>", normal_style))
@@ -268,7 +421,7 @@ def send_email_with_attachment(recipient_email: str, subject: str, body: str, pd
         smtp_password = os.getenv('SMTP_PASSWORD', '')
         
         if not smtp_username or not smtp_password:
-            return False, "⚠️ La fonctionnalité d'envoi par email n'est pas configurée. Veuillez configurer les variables d'environnement SMTP (SMTP_USERNAME et SMTP_PASSWORD)."
+            return False, "⚠️ La fonctionnalité d'envoi par email n'est pas configurée. Veuillez configurer les variables d'environnement SMTP (SMTP_USERNAME et SMTP_PASSWORD). Consultez CONFIGURATION_EMAIL.md pour plus de détails."
         
         # Créer le message
         msg = MIMEMultipart()
@@ -285,12 +438,21 @@ def send_email_with_attachment(recipient_email: str, subject: str, body: str, pd
         msg.attach(pdf_attachment)
         
         # Envoyer l'email
-        with smtplib.SMTP(smtp_server, smtp_port) as server:
-            server.starttls()
-            server.login(smtp_username, smtp_password)
-            server.send_message(msg)
+        try:
+            with smtplib.SMTP(smtp_server, smtp_port, timeout=30) as server:
+                server.set_debuglevel(0)  # Désactiver le mode debug
+                server.starttls()
+                server.login(smtp_username, smtp_password)
+                server.send_message(msg)
+            
+            return True, f"✅ Email envoyé avec succès à {recipient_email}"
         
-        return True, f"✅ Email envoyé avec succès à {recipient_email}"
+        except smtplib.SMTPAuthenticationError:
+            return False, "❌ Erreur d'authentification SMTP. Vérifiez que vous utilisez un mot de passe d'application (App Password) et non votre mot de passe Gmail normal. Consultez CONFIGURATION_EMAIL.md pour plus de détails."
+        except smtplib.SMTPException as smtp_err:
+            return False, f"❌ Erreur SMTP lors de l'envoi de l'email : {str(smtp_err)}"
+        except Exception as send_err:
+            return False, f"❌ Erreur lors de l'envoi de l'email : {str(send_err)}"
         
     except Exception as e:
-        return False, f"❌ Erreur lors de l'envoi de l'email : {str(e)}"
+        return False, f"❌ Erreur lors de la préparation de l'email : {str(e)}"
