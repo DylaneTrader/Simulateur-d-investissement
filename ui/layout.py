@@ -56,7 +56,7 @@ def display_results(inputs: dict, calculation_mode: str):
             calculated_value = calculate_n_years(fv, pv, pmt, rate)
             n_years = calculated_value
             
-            if math.isinf(calculated_value):
+            if not math.isfinite(calculated_value):
                 result_text = "⚠️ **Impossible d'atteindre l'objectif** avec ces paramètres (horizon infini requis)"
             else:
                 years = int(calculated_value)
