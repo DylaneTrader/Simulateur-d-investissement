@@ -3,6 +3,7 @@
 # Gère l'affichage complet de la sidebar :
 # - Logo CGF Gestion
 # - Nom de l'application / sections
+# - Informations commerciales
 # - À propos
 #
 # Les couleurs proviennent de `/core/config.py`.
@@ -11,6 +12,7 @@ import streamlit as st
 from PIL import Image
 import base64
 import io
+from datetime import datetime
 
 from core.config import APP_NAME, PRIMARY_COLOR, SECONDARY_COLOR, ACCENT_COLOR
 
@@ -75,7 +77,81 @@ def display_sidebar():
 
     st.sidebar.markdown("---")
 
+    # ---- Informations commerciales ----
+    display_commercial_info()
+    
+    st.sidebar.markdown("---")
+
     display_about_section()
+
+
+def display_commercial_info():
+    """
+    Affiche les informations commerciales et client dans la sidebar.
+    """
+    st.sidebar.markdown(
+        f"""
+        <h3 style="color:{PRIMARY_COLOR};">Informations</h3>
+        """,
+        unsafe_allow_html=True
+    )
+    
+    # Date auto-actualisée
+    current_date = datetime.now().strftime("%d/%m/%Y")
+    st.sidebar.markdown(f"**📅 Date :** {current_date}")
+    
+    # Interlocuteur (commercial)
+    if "interlocuteur" not in st.session_state:
+        st.session_state.interlocuteur = ""
+    
+    interlocuteur = st.sidebar.text_input(
+        "👤 Interlocuteur (Commercial)",
+        value=st.session_state.interlocuteur,
+        key="interlocuteur_input",
+        placeholder="Nom du/de la commercial(e)"
+    )
+    st.session_state.interlocuteur = interlocuteur
+    
+    # Nom du client
+    if "client_name" not in st.session_state:
+        st.session_state.client_name = ""
+    
+    client_name = st.sidebar.text_input(
+        "👥 Nom du client",
+        value=st.session_state.client_name,
+        key="client_name_input",
+        placeholder="Nom du client"
+    )
+    st.session_state.client_name = client_name
+    
+    # Entreprise (fixe)
+    st.sidebar.markdown("**🏢 Entreprise :** CGF GESTION")
+    
+    # Adresse (fixe)
+    st.sidebar.markdown("**📍 Adresse :** RIVIERA 4, immeuble BRANDON & MCAIN")
+    
+    # Pays (sélection UEMOA)
+    uemoa_countries = [
+        "Côte d'Ivoire",
+        "Bénin",
+        "Burkina Faso",
+        "Guinée-Bissau",
+        "Mali",
+        "Niger",
+        "Sénégal",
+        "Togo"
+    ]
+    
+    if "country" not in st.session_state:
+        st.session_state.country = "Côte d'Ivoire"
+    
+    country = st.sidebar.selectbox(
+        "🌍 Pays",
+        options=uemoa_countries,
+        index=uemoa_countries.index(st.session_state.country) if st.session_state.country in uemoa_countries else 0,
+        key="country_input"
+    )
+    st.session_state.country = country
 
 
 def display_about_section():

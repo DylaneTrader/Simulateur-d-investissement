@@ -174,34 +174,53 @@ def create_simulation_chart(pv, pmt, rate, n_years, fv_target=None):
         st.altair_chart((curve_cum_cap + curve_cum_int).interactive(), use_container_width=True)
 
     # =========================================================
-    # =============== IV — Waterfall FV breakdown =============
+    # ===== IV — Distribution du capital (Pie Chart) ==========
     # =========================================================
 
-    with st.expander("💧 Décomposition du montant final (Waterfall)"):
+    with st.expander("🥧 Distribution du capital estimé", expanded=True):
 
         final = df.iloc[-1]
-        total_pmt = pmt * months
+        total_invested = final["Capital Investi"]
         total_interest = final["Interets"]
 
-        wf_df = pd.DataFrame({
-            "Étape": ["Capital Initial", "Versements Totaux", "Intérêts", "Montant Final"],
-            "Montant": [pv, total_pmt, total_interest, final["Valeur Totale"]],
-            "Couleur": [SECONDARY_COLOR, SECONDARY_COLOR, PRIMARY_COLOR, ACCENT_COLOR]
+        # Données pour le camembert
+        pie_df = pd.DataFrame({
+            "Catégorie": ["Capital Investi", "Intérêts Générés"],
+            "Montant": [total_invested, total_interest],
+            "Couleur": [SECONDARY_COLOR, PRIMARY_COLOR]
         })
 
-        waterfall = (
-            alt.Chart(wf_df)
-            .mark_bar()
+        # Création du graphique en camembert avec Altair
+        pie_chart = (
+            alt.Chart(pie_df)
+            .mark_arc(innerRadius=50)
             .encode(
-                x=alt.X("Étape:N"),
-                y=alt.Y("Montant:Q", title="Montant (FCFA)"),
-                color=alt.Color("Couleur:N", scale=None),
+                theta=alt.Theta("Montant:Q", stack=True),
+                color=alt.Color(
+                    "Catégorie:N",
+                    scale=alt.Scale(
+                        domain=["Capital Investi", "Intérêts Générés"],
+                        range=[SECONDARY_COLOR, PRIMARY_COLOR]
+                    ),
+                    legend=alt.Legend(title="Composition")
+                ),
                 tooltip=[
-                    alt.Tooltip("Étape:N"),
-                    alt.Tooltip("Montant:Q", format=",.0f")
+                    alt.Tooltip("Catégorie:N"),
+                    alt.Tooltip("Montant:Q", format=",.0f", title="Montant (FCFA)"),
                 ]
             )
-            .properties(height=300)
+            .properties(height=400)
         )
 
-        st.altair_chart(waterfall, use_container_width=True)
+        st.altair_chart(pie_chart, use_container_width=True)
+        
+        # Afficher les pourcentages
+        total = total_invested + total_interest
+        invested_pct = (total_invested / total * 100) if total > 0 else 0
+        interest_pct = (total_interest / total * 100) if total > 0 else 0
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.info(f"**Capital Investi** : {invested_pct:.1f}%")
+        with col2:
+            st.success(f"**Intérêts Générés** : {interest_pct:.1f}%")
