@@ -5,9 +5,12 @@
 #
 # Utilise la palette provenant de `core/config.py`
 
+import math
 import streamlit as st
 
 from core.config import PRIMARY_COLOR, SECONDARY_COLOR, ACCENT_COLOR
+from core.calculations import calculate_fv, calculate_pmt, calculate_pv, calculate_n_years
+from core.utils import fmt_money
 from ui.charts import create_simulation_chart
 
 
@@ -18,6 +21,59 @@ def display_results(inputs: dict, calculation_mode: str):
     `calculation_mode` : texte (Montant Final, PV, PMT, Horizon)
     """
 
+    # On récupère les données
+    pv = inputs.get("pv", 0)
+    pmt = inputs.get("pmt", 0)
+    fv = inputs.get("fv", 0)
+    rate = inputs.get("rate", 0)
+    n_years = inputs.get("n_years", 0)
+
+    # -------- CALCUL DU PARAMÈTRE MANQUANT --------
+    calculated_value = None
+    
+    try:
+        if calculation_mode == "Montant Final":
+            calculated_value = calculate_fv(pv, pmt, rate, n_years)
+            fv = calculated_value
+            result_text = f"Montant Final calculé : **{fmt_money(calculated_value)}**"
+            
+        elif calculation_mode == "Versement Mensuel":
+            calculated_value = calculate_pmt(fv, pv, rate, n_years)
+            pmt = calculated_value
+            result_text = f"Versement Mensuel calculé : **{fmt_money(calculated_value)}**"
+            
+            # Afficher aussi les équivalents trimestriels et annuels
+            pmt_quarterly = calculated_value * 3
+            pmt_yearly = calculated_value * 12
+            result_text += f"\n\n*Équivalents :*\n- Par trimestre : {fmt_money(pmt_quarterly)}\n- Par an : {fmt_money(pmt_yearly)}"
+            
+        elif calculation_mode == "Montant Initial":
+            calculated_value = calculate_pv(fv, pmt, rate, n_years)
+            pv = calculated_value
+            result_text = f"Montant Initial calculé : **{fmt_money(calculated_value)}**"
+            
+        elif calculation_mode == "Horizon de Placement":
+            calculated_value = calculate_n_years(fv, pv, pmt, rate)
+            n_years = calculated_value
+            
+            if not math.isfinite(calculated_value):
+                result_text = "⚠️ **Impossible d'atteindre l'objectif** avec ces paramètres (horizon infini requis)"
+            elif calculated_value <= 0:
+                result_text = "✅ **L'objectif est déjà atteint** avec le montant initial actuel (aucun horizon nécessaire)"
+            else:
+                years = int(calculated_value)
+                months = int((calculated_value - years) * 12)
+                result_text = f"Horizon de Placement calculé : **{years} ans et {months} mois** ({calculated_value:.2f} années)"
+        
+        else:
+            st.error("Mode de calcul non reconnu")
+            return
+
+    except Exception as e:
+        st.error(f"Erreur lors du calcul : {str(e)}")
+        return
+
+    # -------- AFFICHAGE DU RÉSULTAT --------
     st.markdown(
         f"""
         <h2 style="
@@ -30,12 +86,8 @@ def display_results(inputs: dict, calculation_mode: str):
         unsafe_allow_html=True
     )
 
-    # On récupère les données déjà calculées en amont
-    pv = inputs.get("pv", 0)
-    pmt = inputs.get("pmt", 0)
-    fv = inputs.get("fv", 0)
-    rate = inputs.get("rate", 0)
-    n_years = inputs.get("n_years", 0)
+    # Affichage du résultat calculé dans une boîte mise en évidence
+    st.success(result_text)
 
     # ----------- BLOC DES MÉTRIQUES -----------
     st.markdown(

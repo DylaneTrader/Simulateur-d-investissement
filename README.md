@@ -42,16 +42,22 @@ Pour exécuter l'application, vous devez avoir Python installé sur votre systè
 
 ### 1. Prérequis
 
-Assurez-vous d'avoir les librairies nécessaires :
+Assurez-vous d'avoir les librairies nécessaires. Utilisez le fichier `requirements.txt` fourni :
 
 ```bash
-pip install streamlit pandas numpy plotly Pillow
+pip install -r requirements.txt
+```
+
+Ou installez manuellement les dépendances :
+
+```bash
+pip install streamlit pandas numpy plotly altair Pillow
 ```
 
 ### 2. Exécution de l'Application
 
-1.  Enregistrez le code Python fourni (`app.py`) dans un fichier.
-2.  Placez le fichier du logo (`1631360014014.jpeg`) dans le même répertoire (ou mettez à jour le chemin dans `app.py`).
+1.  Clonez ou téléchargez le repository complet
+2.  Le logo est déjà présent dans le dossier `assets/`
 3.  Lancez l'application via votre terminal :
 
 ```bash
@@ -59,6 +65,13 @@ streamlit run app.py
 ```
 
 L'application s'ouvrira automatiquement dans votre navigateur web.
+
+### 3. Navigation
+
+L'application comporte plusieurs pages accessibles via le menu latéral :
+- **Accueil** : Page de présentation de l'application
+- **Simulation** : Calculateur d'investissement flexible
+- **Analyse** : Analyses avancées et scénarios de sensibilité
 
 ## Paramètres de l'Application
 
