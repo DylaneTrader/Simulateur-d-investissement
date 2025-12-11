@@ -18,6 +18,10 @@ L'interface est épurée, utilise les couleurs de la marque (Bleu foncé et Gris
 *   **Visualisation Interactive** : Utilisation de Plotly pour des graphiques dynamiques montrant l'évolution de la valeur totale, du capital investi et des intérêts accumulés au fil du temps.
 *   **Aide à la Vente** : Pour le calcul du **Versement Mensuel**, l'application affiche automatiquement les cotisations équivalentes par mois, par trimestre et par année, facilitant la discussion avec le client sur ses capacités d'épargne.
 *   **Cohérence de Marque** : Intégration du logo et des couleurs de la marque pour une présentation professionnelle.
+*   **Export PDF Professionnel** : Génération de rapports PDF détaillés incluant les paramètres de simulation, résultats, analyses et informations commerciales.
+*   **Envoi par Email** : Possibilité d'envoyer les rapports directement par email aux clients (nécessite configuration SMTP).
+*   **Gestion des Informations Commerciales** : Saisie et sauvegarde des informations client (interlocuteur, nom du client, pays) dans la barre latérale pour personnaliser les rapports.
+*   **Interface Moderne en Cartes** : Présentation des métriques et résultats dans des cartes élégantes avec icônes, couleurs et pourcentages.
 
 ## Modèle Financier
 
@@ -51,7 +55,7 @@ pip install -r requirements.txt
 Ou installez manuellement les dépendances :
 
 ```bash
-pip install streamlit pandas numpy plotly altair Pillow
+pip install streamlit pandas numpy plotly altair Pillow reportlab matplotlib
 ```
 
 ### 2. Exécution de l'Application
@@ -100,6 +104,7 @@ Simulateur-d-investissement/
 ├── core/                        # Logique métier et calculs
 │   ├── calculations.py          # Fonctions financières (FV, PMT, PV, n)
 │   ├── config.py                # Configuration globale et palette de couleurs
+│   ├── export.py                # Génération de rapports PDF et envoi email
 │   └── utils.py                 # Utilitaires (formatage monétaire, etc.)
 ├── pages/                       # Pages de l'application Streamlit
 │   ├── 1_Simulation.py          # Page de simulation interactive
@@ -130,6 +135,11 @@ Simulateur-d-investissement/
   - `fmt_money()` : Formatage des montants en FCFA
   - Autres utilitaires de formatage et conversion
 
+- **`export.py`** : Génération de rapports et envoi
+  - `create_pdf_report()` : Génère un rapport PDF professionnel avec ReportLab
+  - `create_download_link()` : Crée un lien de téléchargement pour le PDF
+  - `send_email_with_attachment()` : Envoie le rapport par email (nécessite configuration SMTP)
+
 #### `pages/` - Pages de l'Application
 
 - **`1_Simulation.py`** : Page principale de simulation
@@ -144,9 +154,16 @@ Simulateur-d-investissement/
 
 #### `ui/` - Composants UI
 
-- **`sidebar.py`** : Barre latérale avec logo et navigation
+- **`sidebar.py`** : Barre latérale avec logo, navigation et informations commerciales
+  - Affichage du logo CGF GESTION
+  - Formulaires de saisie des informations commerciales (interlocuteur, nom du client)
+  - Sélecteur de pays (UEMOA)
+  - Section "À propos"
 - **`forms.py`** : Formulaires de saisie des paramètres
 - **`layout.py`** : Affichage des résultats et mise en page
+  - Cartes de métriques avec icônes et couleurs
+  - Génération et téléchargement de rapports PDF
+  - Envoi de rapports par email
 - **`charts.py`** : Génération des graphiques Plotly
 
 ## Exemples d'Utilisation
@@ -189,6 +206,66 @@ Simulateur-d-investissement/
 - Rendement : 5%
 
 **Résultat** : L'application calculera le nombre d'années nécessaires.
+
+## Export et Partage des Rapports
+
+### Génération de Rapports PDF
+
+L'application permet de générer des rapports PDF professionnels incluant :
+- **En-tête avec informations commerciales** : Date, interlocuteur, nom du client, entreprise, pays
+- **Paramètres de la simulation** : Montant initial, versement mensuel, rendement, horizon
+- **Résultats détaillés** : Capital total, capital investi, intérêts générés avec pourcentages
+- **Analyse textuelle** : Résumé de l'investissement et points clés
+- **Pied de page** : Coordonnées CGF GESTION et horodatage
+
+#### Utilisation de l'Export PDF
+
+1. Remplissez les informations commerciales dans la barre latérale (interlocuteur, nom du client, pays)
+2. Effectuez votre simulation
+3. Cliquez sur le bouton **"📥 Générer et télécharger le PDF"**
+4. Le rapport sera généré et téléchargé automatiquement avec un nom unique incluant la date et l'heure
+
+### Envoi par Email
+
+L'application offre également la possibilité d'envoyer les rapports PDF directement par email aux clients.
+
+#### Configuration SMTP (Optionnelle)
+
+Pour activer l'envoi par email, configurez les variables d'environnement suivantes :
+
+```bash
+export SMTP_SERVER="smtp.gmail.com"
+export SMTP_PORT="587"
+export SMTP_USERNAME="votre.email@gmail.com"
+export SMTP_PASSWORD="votre_mot_de_passe"
+```
+
+**Note** : Si vous utilisez Gmail, vous devrez créer un [mot de passe d'application](https://support.google.com/accounts/answer/185833) pour des raisons de sécurité.
+
+#### Utilisation de l'Envoi par Email
+
+1. Configurez les variables d'environnement SMTP (voir ci-dessus)
+2. Effectuez votre simulation
+3. Dans la section "📧 Envoyer par email", saisissez l'adresse email du destinataire
+4. Cliquez sur **"📧 Envoyer le rapport"**
+5. Le rapport PDF sera envoyé avec un email personnalisé incluant un résumé des résultats
+
+**Note** : Si la configuration SMTP n'est pas disponible, vous pouvez toujours télécharger le PDF et l'envoyer manuellement.
+
+### Informations Commerciales
+
+Les informations commerciales saisies dans la barre latérale sont :
+- **Automatiquement incluses** dans les rapports PDF générés
+- **Sauvegardées dans la session** pour éviter de les ressaisir
+- **Persistantes** durant toute la navigation dans l'application
+
+Champs disponibles :
+- **Date** : Générée automatiquement à la date du jour
+- **Interlocuteur (Commercial)** : Nom du commercial CGF GESTION
+- **Nom du client** : Nom du client ou prospect
+- **Entreprise** : CGF GESTION (fixe)
+- **Adresse** : RIVIERA 4, immeuble BRANDON & MCAIN (fixe)
+- **Pays** : Sélection parmi les pays de l'UEMOA (Côte d'Ivoire, Bénin, Burkina Faso, etc.)
 
 ## Configuration Avancée
 
@@ -389,19 +466,45 @@ from core.utils import fmt_money
 formatted = fmt_money(1000000)  # Retourne "1 000 000 FCFA"
 ```
 
+### Problèmes avec l'export PDF
+
+**Problème** : Erreur lors de la génération du PDF
+**Solution** : 
+1. Vérifiez que ReportLab est installé : `pip install reportlab`
+2. Vérifiez que Matplotlib est installé : `pip install matplotlib`
+3. Si l'erreur persiste, redémarrez l'application Streamlit
+
+**Problème** : Les caractères spéciaux ne s'affichent pas correctement dans le PDF
+**Solution** : ReportLab utilise des polices standard. Les caractères spéciaux français (é, è, à, etc.) sont supportés, mais certains caractères très spéciaux peuvent nécessiter une configuration de police personnalisée.
+
+### Problèmes avec l'envoi par email
+
+**Problème** : L'envoi par email ne fonctionne pas
+**Solution** : 
+1. Vérifiez que les variables d'environnement SMTP sont correctement configurées
+2. Si vous utilisez Gmail, assurez-vous d'utiliser un "mot de passe d'application" et non votre mot de passe habituel
+3. Vérifiez que votre pare-feu autorise les connexions SMTP sortantes sur le port 587
+4. En cas d'échec, utilisez le téléchargement PDF et envoyez le fichier manuellement
+
 ## FAQ
 
 **Q : Puis-je utiliser une autre devise que le FCFA ?**
 R : Oui, modifiez la fonction `fmt_money()` dans `core/utils.py` pour changer la devise affichée.
 
 **Q : Comment exporter les résultats ?**
-R : Actuellement, l'application ne propose pas d'export direct. Vous pouvez utiliser la fonction de capture d'écran de votre navigateur ou ajouter une fonctionnalité d'export en modifiant `ui/layout.py`.
+R : L'application propose une fonctionnalité d'export PDF intégrée. Cliquez sur le bouton "📥 Générer et télécharger le PDF" pour obtenir un rapport complet au format PDF. Vous pouvez également envoyer ce rapport par email si vous avez configuré les paramètres SMTP.
+
+**Q : Comment configurer l'envoi par email ?**
+R : Pour envoyer des rapports par email, vous devez configurer les variables d'environnement SMTP (SMTP_SERVER, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD). Voir la section "Export et Partage des Rapports" pour plus de détails.
 
 **Q : Les calculs sont-ils fiables pour des conseils financiers ?**
 R : Les calculs sont basés sur des formules financières standard. Cependant, cet outil est conçu pour l'illustration et la simulation. Pour des conseils financiers personnalisés, consultez toujours un professionnel qualifié.
 
 **Q : Puis-je utiliser des versements autres que mensuels ?**
 R : Actuellement, l'application est configurée pour des versements mensuels. Pour d'autres fréquences, vous devrez adapter les fonctions dans `core/calculations.py`.
+
+**Q : Les informations commerciales sont-elles sauvegardées ?**
+R : Oui, les informations saisies dans la barre latérale (interlocuteur, nom du client, pays) sont conservées dans la session Streamlit pendant toute la durée de votre utilisation de l'application. Elles ne sont pas sauvegardées sur disque et seront perdues si vous fermez le navigateur.
 
 **Q : Comment signaler un bug ou suggérer une fonctionnalité ?**
 R : Contactez directement le développeur (voir section Contact et Support ci-dessous) pour signaler un bug ou suggérer des améliorations.
@@ -414,6 +517,8 @@ R : Contactez directement le développeur (voir section Contact et Support ci-de
 - **[Plotly](https://plotly.com/python/)** (≥5.17.0) - Graphiques interactifs
 - **[Altair](https://altair-viz.github.io/)** (≥5.1.0) - Visualisations déclaratives
 - **[Pillow](https://pillow.readthedocs.io/)** (≥10.0.0) - Traitement d'images
+- **[ReportLab](https://www.reportlab.com/)** (≥4.0.0) - Génération de documents PDF
+- **[Matplotlib](https://matplotlib.org/)** (≥3.7.0) - Bibliothèque de visualisation (backend pour PDF)
 
 ## Licence
 
@@ -443,7 +548,12 @@ Pour toute question, suggestion ou problème technique concernant l'application,
 - ✅ Version initiale avec calcul flexible des 4 paramètres
 - ✅ Interface utilisateur avec thème CGF GESTION
 - ✅ Graphiques interactifs avec Plotly
-- ✅ Page d'analyse avancée
+- ✅ Page d'analyse avancée avec scénarios de sensibilité
+- ✅ Interface moderne avec cartes de métriques
+- ✅ Export professionnel au format PDF avec ReportLab
+- ✅ Envoi de rapports par email (avec configuration SMTP)
+- ✅ Gestion des informations commerciales dans la sidebar
+- ✅ Sélection de pays UEMOA
 - ✅ Documentation complète
 
 ---
