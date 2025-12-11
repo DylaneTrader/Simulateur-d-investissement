@@ -244,10 +244,18 @@ Pour activer l'envoi par email, configurez les variables d'environnement suivant
 export SMTP_SERVER="smtp.gmail.com"
 export SMTP_PORT="587"
 export SMTP_USERNAME="votre.email@gmail.com"
-export SMTP_PASSWORD="votre_mot_de_passe"
+export SMTP_PASSWORD="votre_mot_de_passe_application"
 ```
 
-**⚠️ Sécurité** : Ne committez jamais vos identifiants SMTP dans le code source. Utilisez des variables d'environnement ou un gestionnaire de secrets (comme AWS Secrets Manager, Azure Key Vault) en production.
+Vous pouvez aussi créer un fichier `.env` à la racine du projet (voir `.env.example`):
+```bash
+cp .env.example .env
+# Puis éditez .env avec vos vraies valeurs
+```
+
+**⚠️ Sécurité** : Ne committez jamais vos identifiants SMTP dans le code source. Le fichier `.env` est automatiquement ignoré par Git. Utilisez des gestionnaires de secrets (comme AWS Secrets Manager, Azure Key Vault) en production.
+
+**📖 Guide complet** : Consultez [CONFIGURATION_EMAIL.md](CONFIGURATION_EMAIL.md) pour un guide détaillé étape par étape avec Gmail.
 
 **Note** : Si vous utilisez Gmail, vous devrez créer un [mot de passe d'application](https://support.google.com/accounts/answer/185833) pour des raisons de sécurité.
 

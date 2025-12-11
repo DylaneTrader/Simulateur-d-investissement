@@ -252,7 +252,7 @@ def send_email_with_attachment(recipient_email: str, subject: str, body: str, pd
         filename: Nom du fichier PDF
         
     Returns:
-        bool: True si l'envoi a réussi, False sinon
+        tuple: (success: bool, message: str) - True si l'envoi a réussi avec un message de statut
     """
     try:
         import smtplib
@@ -268,11 +268,7 @@ def send_email_with_attachment(recipient_email: str, subject: str, body: str, pd
         smtp_password = os.getenv('SMTP_PASSWORD', '')
         
         if not smtp_username or not smtp_password:
-            st.warning(
-                "⚠️ La fonctionnalité d'envoi par email n'est pas configurée. "
-                "Veuillez configurer les variables d'environnement SMTP."
-            )
-            return False
+            return False, "⚠️ La fonctionnalité d'envoi par email n'est pas configurée. Veuillez configurer les variables d'environnement SMTP (SMTP_USERNAME et SMTP_PASSWORD)."
         
         # Créer le message
         msg = MIMEMultipart()
@@ -294,8 +290,7 @@ def send_email_with_attachment(recipient_email: str, subject: str, body: str, pd
             server.login(smtp_username, smtp_password)
             server.send_message(msg)
         
-        return True
+        return True, f"✅ Email envoyé avec succès à {recipient_email}"
         
     except Exception as e:
-        st.error(f"❌ Erreur lors de l'envoi de l'email : {str(e)}")
-        return False
+        return False, f"❌ Erreur lors de l'envoi de l'email : {str(e)}"

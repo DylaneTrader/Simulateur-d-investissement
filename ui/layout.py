@@ -185,43 +185,49 @@ def display_results(inputs: dict, calculation_mode: str):
         unsafe_allow_html=True
     )
 
+    # Préparer les informations pour le PDF (utilisé par les deux colonnes)
+    commercial_info = {
+        'date': datetime.now().strftime("%d/%m/%Y"),
+        'interlocuteur': st.session_state.get('interlocuteur', ''),
+        'client_name': st.session_state.get('client_name', ''),
+        'country': st.session_state.get('country', 'Côte d\'Ivoire')
+    }
+    
+    results = {
+        'total_capital': total_capital,
+        'total_invested': total_invested,
+        'total_interest': total_interest
+    }
+    
+    # Fonction cachée pour générer le PDF (évite régénération à chaque render)
+    @st.cache_data
+    def generate_pdf_cached(inputs_str, results_str, commercial_info_str):
+        """Génère le PDF avec mise en cache pour performance"""
+        # Reconstruit les dicts depuis les strings pour le cache
+        return create_pdf_report(inputs, results, commercial_info)
+    
+    # Créer des clés de cache basées sur les données
+    cache_key = f"{str(inputs)}_{str(results)}_{str(commercial_info)}"
+    
     col1, col2 = st.columns([1, 1])
 
     with col1:
-        # Bouton de téléchargement PDF
-        if st.button("📥 Générer et télécharger le PDF", type="primary", use_container_width=True):
-            # Récupérer les informations commerciales depuis session_state
-            commercial_info = {
-                'date': datetime.now().strftime("%d/%m/%Y"),
-                'interlocuteur': st.session_state.get('interlocuteur', ''),
-                'client_name': st.session_state.get('client_name', ''),
-                'country': st.session_state.get('country', 'Côte d\'Ivoire')
-            }
+        # Générer le PDF
+        with st.spinner("Génération du rapport PDF..."):
+            pdf_bytes = generate_pdf_cached(str(inputs), str(results), str(commercial_info))
             
-            # Préparer les données pour le PDF
-            results = {
-                'total_capital': total_capital,
-                'total_invested': total_invested,
-                'total_interest': total_interest
-            }
+            # Créer un nom de fichier unique
+            filename = f"rapport_simulation_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
             
-            # Générer le PDF
-            with st.spinner("Génération du rapport PDF..."):
-                pdf_bytes = create_pdf_report(inputs, results, commercial_info)
-                
-                # Créer un nom de fichier unique
-                filename = f"rapport_simulation_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-                
-                # Offrir le téléchargement
-                st.download_button(
-                    label="📥 Télécharger le rapport",
-                    data=pdf_bytes,
-                    file_name=filename,
-                    mime="application/pdf",
-                    use_container_width=True
-                )
-                
-                st.success("✅ Rapport PDF généré avec succès !")
+            # Bouton de téléchargement PDF direct
+            st.download_button(
+                label="📥 Télécharger le rapport PDF",
+                data=pdf_bytes,
+                file_name=filename,
+                mime="application/pdf",
+                type="primary",
+                use_container_width=True
+            )
 
     with col2:
         # Formulaire d'envoi par email
@@ -234,24 +240,9 @@ def display_results(inputs: dict, calculation_mode: str):
             
             if st.button("📧 Envoyer le rapport", use_container_width=True):
                 if recipient_email and '@' in recipient_email:
-                    # Récupérer les informations commerciales
-                    commercial_info = {
-                        'date': datetime.now().strftime("%d/%m/%Y"),
-                        'interlocuteur': st.session_state.get('interlocuteur', ''),
-                        'client_name': st.session_state.get('client_name', ''),
-                        'country': st.session_state.get('country', 'Côte d\'Ivoire')
-                    }
-                    
-                    # Préparer les données pour le PDF
-                    results = {
-                        'total_capital': total_capital,
-                        'total_invested': total_invested,
-                        'total_interest': total_interest
-                    }
-                    
-                    # Générer le PDF
+                    # Générer le PDF (réutilise le cache si disponible)
                     with st.spinner("Préparation et envoi de l'email..."):
-                        pdf_bytes = create_pdf_report(inputs, results, commercial_info)
+                        pdf_bytes = generate_pdf_cached(str(inputs), str(results), str(commercial_info))
                         
                         # Préparer l'email
                         client_name = commercial_info.get('client_name', 'Client')
@@ -280,7 +271,7 @@ def display_results(inputs: dict, calculation_mode: str):
                         filename = f"rapport_simulation_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
                         
                         # Envoyer l'email
-                        success = send_email_with_attachment(
+                        success, message = send_email_with_attachment(
                             recipient_email,
                             subject,
                             body,
@@ -289,9 +280,9 @@ def display_results(inputs: dict, calculation_mode: str):
                         )
                         
                         if success:
-                            st.success(f"✅ Rapport envoyé avec succès à {recipient_email} !")
+                            st.success(message)
                         else:
-                            st.info("ℹ️ L'envoi par email nécessite une configuration SMTP. Utilisez le téléchargement PDF pour le moment.")
+                            st.warning(message)
                 else:
                     st.error("⚠️ Veuillez entrer une adresse email valide.")
 

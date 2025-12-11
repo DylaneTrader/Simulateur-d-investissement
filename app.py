@@ -8,6 +8,14 @@ import streamlit as st
 from ui.sidebar import display_sidebar
 from core.config import get_theme_css, APP_NAME, PRIMARY_COLOR
 
+# Charger les variables d'environnement depuis .env si disponible
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    # python-dotenv n'est pas installé, les variables système seront utilisées
+    pass
+
 # Configuration de la page principale
 st.set_page_config(
     page_title=APP_NAME,
