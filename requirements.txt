@@ -19,3 +19,6 @@ Pillow>=10.0.0
 reportlab>=4.0.0
 matplotlib>=3.7.0
 
+# Email et configuration
+python-dotenv>=1.0.0
+
