@@ -55,7 +55,7 @@ pip install -r requirements.txt
 Ou installez manuellement les dépendances :
 
 ```bash
-pip install streamlit pandas numpy plotly altair Pillow reportlab matplotlib
+pip install streamlit>=1.28.0 pandas>=2.0.0 numpy>=1.24.0 plotly>=5.17.0 altair>=5.1.0 Pillow>=10.0.0 reportlab>=4.0.0 matplotlib>=3.7.0
 ```
 
 ### 2. Exécution de l'Application
@@ -246,6 +246,8 @@ export SMTP_PORT="587"
 export SMTP_USERNAME="votre.email@gmail.com"
 export SMTP_PASSWORD="votre_mot_de_passe"
 ```
+
+**⚠️ Sécurité** : Ne committez jamais vos identifiants SMTP dans le code source. Utilisez des variables d'environnement ou un gestionnaire de secrets (comme AWS Secrets Manager, Azure Key Vault) en production.
 
 **Note** : Si vous utilisez Gmail, vous devrez créer un [mot de passe d'application](https://support.google.com/accounts/answer/185833) pour des raisons de sécurité.
 
