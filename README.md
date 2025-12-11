@@ -76,6 +76,11 @@ L'application comporte plusieurs pages accessibles via le menu latéral :
 - **Accueil** : Page de présentation de l'application
 - **Simulation** : Calculateur d'investissement flexible
 - **Analyse** : Analyses avancées et scénarios de sensibilité
+  - Comparaison par horizon de placement
+  - Analyse de sensibilité aux taux de rendement
+  - Analyse de sensibilité aux versements mensuels
+  - Scénario de retraits réguliers pour planification retraite
+  - Impact de l'inflation sur le pouvoir d'achat
 
 ## Paramètres de l'Application
 
@@ -148,9 +153,11 @@ Simulateur-d-investissement/
   - Affichage des résultats avec graphiques
 
 - **`2_Analyse.py`** : Analyses avancées
-  - Comparaison de plusieurs horizons
+  - Comparaison de plusieurs horizons de placement (5, 10, 15, 20 ans)
   - Analyse de sensibilité au taux de rendement
   - Analyse de sensibilité aux versements mensuels
+  - Scénario de retraits réguliers (phase accumulation + phase retrait)
+  - Impact de l'inflation sur la valeur réelle du capital
 
 #### `ui/` - Composants UI
 
