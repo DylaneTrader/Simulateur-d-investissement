@@ -5,6 +5,7 @@
 #
 # Utilise la palette provenant de `core/config.py`
 
+import math
 import streamlit as st
 
 from core.config import PRIMARY_COLOR, SECONDARY_COLOR, ACCENT_COLOR
@@ -55,7 +56,7 @@ def display_results(inputs: dict, calculation_mode: str):
             calculated_value = calculate_n_years(fv, pv, pmt, rate)
             n_years = calculated_value
             
-            if calculated_value == float('inf'):
+            if math.isinf(calculated_value):
                 result_text = "⚠️ **Impossible d'atteindre l'objectif** avec ces paramètres (horizon infini requis)"
             else:
                 years = int(calculated_value)
