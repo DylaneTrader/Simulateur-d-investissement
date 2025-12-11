@@ -420,7 +420,7 @@ def send_email_with_attachment(recipient_email: str, subject: str, body: str, pd
         smtp_password = os.getenv('SMTP_PASSWORD', '')
         
         if not smtp_username or not smtp_password:
-            return False, "⚠️ La fonctionnalité d'envoi par email n'est pas configurée. Veuillez configurer les variables d'environnement SMTP (SMTP_USERNAME et SMTP_PASSWORD)."
+            return False, "⚠️ La fonctionnalité d'envoi par email n'est pas configurée. Veuillez configurer les variables d'environnement SMTP (SMTP_USERNAME et SMTP_PASSWORD). Consultez CONFIGURATION_EMAIL.md pour plus de détails."
         
         # Créer le message
         msg = MIMEMultipart()
@@ -437,12 +437,21 @@ def send_email_with_attachment(recipient_email: str, subject: str, body: str, pd
         msg.attach(pdf_attachment)
         
         # Envoyer l'email
-        with smtplib.SMTP(smtp_server, smtp_port) as server:
-            server.starttls()
-            server.login(smtp_username, smtp_password)
-            server.send_message(msg)
+        try:
+            with smtplib.SMTP(smtp_server, smtp_port, timeout=30) as server:
+                server.set_debuglevel(0)  # Désactiver le mode debug
+                server.starttls()
+                server.login(smtp_username, smtp_password)
+                server.send_message(msg)
+            
+            return True, f"✅ Email envoyé avec succès à {recipient_email}"
         
-        return True, f"✅ Email envoyé avec succès à {recipient_email}"
+        except smtplib.SMTPAuthenticationError:
+            return False, "❌ Erreur d'authentification SMTP. Vérifiez que vous utilisez un mot de passe d'application (App Password) et non votre mot de passe Gmail normal. Consultez CONFIGURATION_EMAIL.md pour plus de détails."
+        except smtplib.SMTPException as smtp_err:
+            return False, f"❌ Erreur SMTP lors de l'envoi de l'email : {str(smtp_err)}"
+        except Exception as send_err:
+            return False, f"❌ Erreur lors de l'envoi de l'email : {str(send_err)}"
         
     except Exception as e:
-        return False, f"❌ Erreur lors de l'envoi de l'email : {str(e)}"
+        return False, f"❌ Erreur lors de la préparation de l'email : {str(e)}"
