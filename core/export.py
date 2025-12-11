@@ -22,7 +22,7 @@ import matplotlib
 matplotlib.use('Agg')  # Use non-interactive backend
 
 from core.utils import fmt_money
-from core.config import PRIMARY_COLOR, SECONDARY_COLOR, APP_NAME, ACCENT_COLOR
+from core.config import PRIMARY_COLOR, SECONDARY_COLOR, APP_NAME
 
 
 def _create_portfolio_evolution_chart(pv, pmt, rate, n_years):
@@ -192,6 +192,7 @@ def create_pdf_report(inputs: dict, results: dict, commercial_info: dict = None)
             elements.append(Spacer(1, 0.3*cm))
         except Exception as e:
             # Si le logo ne peut pas être chargé, on continue sans
+            # Le PDF sera généré sans logo mais avec tout le reste
             pass
     
     # En-tête
