@@ -58,6 +58,8 @@ def display_results(inputs: dict, calculation_mode: str):
             
             if not math.isfinite(calculated_value):
                 result_text = "⚠️ **Impossible d'atteindre l'objectif** avec ces paramètres (horizon infini requis)"
+            elif calculated_value <= 0:
+                result_text = "✅ **L'objectif est déjà atteint** avec le montant initial actuel (aucun horizon nécessaire)"
             else:
                 years = int(calculated_value)
                 months = int((calculated_value - years) * 12)
