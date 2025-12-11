@@ -1,0 +1,158 @@
+/* ============================================================
+   STYLE GLOBAL — CGF GESTION
+   Palette basée sur :
+   - PRIMARY   = #114B80 (bleu profond)
+   - SECONDARY = #567389 (bleu-gris)
+   - ACCENT    = #ACC7DF (bleu clair)
+   ============================================================ */
+
+/* ----------- GLOBAL ----------- */
+
+html, body, [class*="css"] {
+    font-family: "Inter", sans-serif !important;
+    color: #1f2a33 !important;
+}
+
+/* Background général */
+section.main > div {
+    background-color: #f7f9fb !important;
+}
+
+/* ----------- TITRES ----------- */
+h1, h2, h3, h4, h5 {
+    color: #114B80 !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.5px;
+}
+
+/* ----------- SIDEBAR ----------- */
+
+.sidebar .sidebar-content {
+    background-color: #ffffff !important;
+}
+
+.css-1d391kg h2 {
+    color: #114B80 !important;
+}
+
+/* Accent dans la sidebar */
+.sidebar .stMarkdown {
+    color: #567389 !important;
+}
+
+/* ----------- BOUTONS Streamlit ----------- */
+
+div.stButton > button {
+    background: linear-gradient(180deg, #114B80 0%, #567389 100%) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 12px !important;
+    padding: 8px 14px !important;
+    transition: 0.2s ease-in-out;
+    font-weight: 600;
+}
+
+div.stButton > button:hover {
+    filter: brightness(0.93);
+    transform: translateY(-1px);
+}
+
+/* Bouton désactivé */
+div.stButton > button:disabled {
+    background: #b3c4d1 !important;
+    cursor: not-allowed !important;
+}
+
+/* ----------- INPUTS & WIDGETS ----------- */
+
+input, select, textarea, .stTextInput input,
+.stNumberInput input {
+    border-radius: 8px !important;
+    border: 1px solid rgba(86, 115, 137, 0.35) !important;
+    padding: 6px 10px !important;
+}
+
+/* Sliders */
+.css-1okebmr {
+    color: #114B80 !important;
+}
+
+/* ----------- METRICS ----------- */
+
+.stMetric-value {
+    color: #114B80 !important;
+    font-weight: 700 !important;
+    font-size: 1.4rem !important;
+}
+
+.stMetric-label {
+    color: #567389 !important;
+}
+
+/* ----------- CARTES / CONTAINERS ----------- */
+
+.block-container {
+    padding-top: 1rem !important;
+}
+
+.card, .stCard, .stExpander {
+    background: #ffffff !important;
+    border-radius: 12px !important;
+    padding: 12px !important;
+    border: 1px solid rgba(86, 115, 137, 0.15) !important;
+}
+
+.accent-bg {
+    background-color: #ACC7DF22 !important;
+    border-radius: 12px !important;
+    padding: 10px !important;
+}
+
+/* ----------- EXPANDER ----------- */
+
+.streamlit-expanderHeader {
+    color: #114B80 !important;
+    font-weight: 600 !important;
+}
+
+.streamlit-expanderHeader:hover {
+    background-color: #ACC7DF22 !important;
+}
+
+/* ----------- SÉPARATEURS ----------- */
+
+hr {
+    border: none;
+    border-top: 1px solid rgba(86, 115, 137, 0.25) !important;
+}
+
+/* ----------- PLOTLY ----------- */
+
+/* Légère harmonisation du fond */
+.js-plotly-plot .plotly {
+    background-color: #ffffff !important;
+}
+
+/* ----------- FOOTER ----------- */
+
+footer {
+    visibility: hidden !important;
+}
+
+/* ----------- RESPONSIVE ----------- */
+
+@media (max-width: 768px) {
+    h1 {
+        font-size: 1.6rem !important;
+    }
+    h2 {
+        font-size: 1.3rem !important;
+    }
+    .block-container {
+        padding-left: 0.5rem !important;
+        padding-right: 0.5rem !important;
+    }
+}
+/* ============================================================
+   FIN DU STYLE GLOBAL
+   ============================================================ */
