@@ -237,22 +237,31 @@ def display_results(inputs: dict, calculation_mode: str):
         'total_interest': total_interest
     }
     
+    # Créer un dict d'inputs mis à jour avec les valeurs calculées
+    updated_inputs = {
+        'pv': pv,
+        'pmt': pmt,
+        'fv': fv,
+        'rate': rate,
+        'n_years': n_years
+    }
+    
     # Fonction cachée pour générer le PDF (évite régénération à chaque render)
     @st.cache_data
     def generate_pdf_cached(inputs_str, results_str, commercial_info_str):
         """Génère le PDF avec mise en cache pour performance"""
         # Reconstruit les dicts depuis les strings pour le cache
-        return create_pdf_report(inputs, results, commercial_info)
+        return create_pdf_report(updated_inputs, results, commercial_info)
     
     # Créer des clés de cache basées sur les données
-    cache_key = f"{str(inputs)}_{str(results)}_{str(commercial_info)}"
+    cache_key = f"{str(updated_inputs)}_{str(results)}_{str(commercial_info)}"
     
     col1, col2 = st.columns([1, 1])
 
     with col1:
         # Générer le PDF
         with st.spinner("Génération du rapport PDF..."):
-            pdf_bytes = generate_pdf_cached(str(inputs), str(results), str(commercial_info))
+            pdf_bytes = generate_pdf_cached(str(updated_inputs), str(results), str(commercial_info))
             
             # Créer un nom de fichier unique
             filename = f"rapport_simulation_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
@@ -280,7 +289,7 @@ def display_results(inputs: dict, calculation_mode: str):
                 if recipient_email and '@' in recipient_email:
                     # Générer le PDF (réutilise le cache si disponible)
                     with st.spinner("Préparation et envoi de l'email..."):
-                        pdf_bytes = generate_pdf_cached(str(inputs), str(results), str(commercial_info))
+                        pdf_bytes = generate_pdf_cached(str(updated_inputs), str(results), str(commercial_info))
                         
                         # Préparer l'email
                         client_name = commercial_info.get('client_name', 'Client')
