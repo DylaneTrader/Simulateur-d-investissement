@@ -417,36 +417,10 @@ from core.utils import fmt_money
 formatted = fmt_money(1000000)  # Retourne "1 000 000 FCFA"
 ```
 
-### Problèmes avec l'export PDF
-
-**Problème** : Erreur lors de la génération du PDF
-**Solution** : 
-1. Vérifiez que ReportLab est installé : `pip install reportlab`
-2. Vérifiez que Matplotlib est installé : `pip install matplotlib`
-3. Si l'erreur persiste, redémarrez l'application Streamlit
-
-**Problème** : Les caractères spéciaux ne s'affichent pas correctement dans le PDF
-**Solution** : ReportLab utilise des polices standard. Les caractères spéciaux français (é, è, à, etc.) sont supportés, mais certains caractères très spéciaux peuvent nécessiter une configuration de police personnalisée.
-
-### Problèmes avec l'envoi par email
-
-**Problème** : L'envoi par email ne fonctionne pas
-**Solution** : 
-1. Vérifiez que les variables d'environnement SMTP sont correctement configurées
-2. Si vous utilisez Gmail, assurez-vous d'utiliser un "mot de passe d'application" et non votre mot de passe habituel
-3. Vérifiez que votre pare-feu autorise les connexions SMTP sortantes sur le port 587
-4. En cas d'échec, utilisez le téléchargement PDF et envoyez le fichier manuellement
-
 ## FAQ
 
 **Q : Puis-je utiliser une autre devise que le FCFA ?**
 R : Oui, modifiez la fonction `fmt_money()` dans `core/utils.py` pour changer la devise affichée.
-
-**Q : Comment exporter les résultats ?**
-R : L'application propose une fonctionnalité d'export PDF intégrée. Cliquez sur le bouton "📥 Générer et télécharger le PDF" pour obtenir un rapport complet au format PDF. Vous pouvez également envoyer ce rapport par email si vous avez configuré les paramètres SMTP.
-
-**Q : Comment configurer l'envoi par email ?**
-R : Pour envoyer des rapports par email, vous devez configurer les variables d'environnement SMTP (SMTP_SERVER, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD). Voir la section "Export et Partage des Rapports" pour plus de détails.
 
 **Q : Les calculs sont-ils fiables pour des conseils financiers ?**
 R : Les calculs sont basés sur des formules financières standard. Cependant, cet outil est conçu pour l'illustration et la simulation. Pour des conseils financiers personnalisés, consultez toujours un professionnel qualifié.
@@ -468,8 +442,6 @@ R : Contactez directement le développeur (voir section Contact et Support ci-de
 - **[Plotly](https://plotly.com/python/)** (≥5.17.0) - Graphiques interactifs
 - **[Altair](https://altair-viz.github.io/)** (≥5.1.0) - Visualisations déclaratives
 - **[Pillow](https://pillow.readthedocs.io/)** (≥10.0.0) - Traitement d'images
-- **[ReportLab](https://www.reportlab.com/)** (≥4.0.0) - Génération de documents PDF
-- **[Matplotlib](https://matplotlib.org/)** (≥3.7.0) - Bibliothèque de visualisation (backend pour PDF)
 
 ## Licence
 
@@ -498,11 +470,9 @@ Pour toute question, suggestion ou problème technique concernant l'application,
 ### Version 1.0.0 (Décembre 2025)
 - ✅ Version initiale avec calcul flexible des 4 paramètres
 - ✅ Interface utilisateur avec thème CGF GESTION
-- ✅ Graphiques interactifs avec Plotly
+- ✅ Graphiques interactifs avec Plotly et Altair
 - ✅ Page d'analyse avancée avec scénarios de sensibilité
 - ✅ Interface moderne avec cartes de métriques
-- ✅ Export professionnel au format PDF avec ReportLab
-- ✅ Envoi de rapports par email (avec configuration SMTP)
 - ✅ Gestion des informations commerciales dans la sidebar
 - ✅ Sélection de pays UEMOA
 - ✅ Documentation complète
