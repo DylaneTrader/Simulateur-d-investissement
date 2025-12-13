@@ -15,12 +15,10 @@ L'interface est épurée, utilise les couleurs de la marque (Bleu foncé et Gris
 ## Fonctionnalités Clés
 
 *   **Calcul Flexible** : L'utilisateur choisit le paramètre à calculer, et l'application détermine sa valeur en fonction des entrées restantes.
-*   **Visualisation Interactive** : Utilisation de Plotly pour des graphiques dynamiques montrant l'évolution de la valeur totale, du capital investi et des intérêts accumulés au fil du temps.
+*   **Visualisation Interactive** : Utilisation de Plotly et Altair pour des graphiques dynamiques montrant l'évolution de la valeur totale, du capital investi et des intérêts accumulés au fil du temps.
 *   **Aide à la Vente** : Pour le calcul du **Versement Mensuel**, l'application affiche automatiquement les cotisations équivalentes par mois, par trimestre et par année, facilitant la discussion avec le client sur ses capacités d'épargne.
 *   **Cohérence de Marque** : Intégration du logo et des couleurs de la marque pour une présentation professionnelle.
-*   **Export PDF Professionnel** : Génération de rapports PDF détaillés incluant les paramètres de simulation, résultats, analyses et informations commerciales.
-*   **Envoi par Email** : Possibilité d'envoyer les rapports directement par email aux clients (nécessite configuration SMTP).
-*   **Gestion des Informations Commerciales** : Saisie et sauvegarde des informations client (interlocuteur, nom du client, pays) dans la barre latérale pour personnaliser les rapports.
+*   **Gestion des Informations Commerciales** : Saisie et sauvegarde des informations client (interlocuteur, nom du client, pays) dans la barre latérale.
 *   **Interface Moderne en Cartes** : Présentation des métriques et résultats dans des cartes élégantes avec icônes, couleurs et pourcentages.
 
 ## Modèle Financier
@@ -55,7 +53,7 @@ pip install -r requirements.txt
 Ou installez manuellement les dépendances :
 
 ```bash
-pip install streamlit>=1.28.0 pandas>=2.0.0 numpy>=1.24.0 plotly>=5.17.0 altair>=5.1.0 Pillow>=10.0.0 reportlab>=4.0.0 matplotlib>=3.7.0
+pip install streamlit>=1.28.0 pandas>=2.0.0 numpy>=1.24.0 plotly>=5.17.0 altair>=5.1.0 Pillow>=10.0.0
 ```
 
 ### 2. Exécution de l'Application
@@ -109,7 +107,6 @@ Simulateur-d-investissement/
 ├── core/                        # Logique métier et calculs
 │   ├── calculations.py          # Fonctions financières (FV, PMT, PV, n)
 │   ├── config.py                # Configuration globale et palette de couleurs
-│   ├── export.py                # Génération de rapports PDF et envoi email
 │   └── utils.py                 # Utilitaires (formatage monétaire, etc.)
 ├── pages/                       # Pages de l'application Streamlit
 │   ├── 1_Simulation.py          # Page de simulation interactive
@@ -140,11 +137,6 @@ Simulateur-d-investissement/
   - `fmt_money()` : Formatage des montants en FCFA
   - Autres utilitaires de formatage et conversion
 
-- **`export.py`** : Génération de rapports et envoi
-  - `create_pdf_report()` : Génère un rapport PDF professionnel avec ReportLab
-  - `create_download_link()` : Crée un lien de téléchargement pour le PDF
-  - `send_email_with_attachment()` : Envoie le rapport par email (nécessite configuration SMTP)
-
 #### `pages/` - Pages de l'Application
 
 - **`1_Simulation.py`** : Page principale de simulation
@@ -169,9 +161,7 @@ Simulateur-d-investissement/
 - **`forms.py`** : Formulaires de saisie des paramètres
 - **`layout.py`** : Affichage des résultats et mise en page
   - Cartes de métriques avec icônes et couleurs
-  - Génération et téléchargement de rapports PDF
-  - Envoi de rapports par email
-- **`charts.py`** : Génération des graphiques Plotly
+- **`charts.py`** : Génération des graphiques Altair et visualisations interactives
 
 ## Exemples d'Utilisation
 
@@ -214,65 +204,9 @@ Simulateur-d-investissement/
 
 **Résultat** : L'application calculera le nombre d'années nécessaires.
 
-## Export et Partage des Rapports
-
-### Génération de Rapports PDF
-
-L'application permet de générer des rapports PDF professionnels incluant :
-- **En-tête avec informations commerciales** : Date, interlocuteur, nom du client, entreprise, pays
-- **Paramètres de la simulation** : Montant initial, versement mensuel, rendement, horizon
-- **Résultats détaillés** : Capital total, capital investi, intérêts générés avec pourcentages
-- **Analyse textuelle** : Résumé de l'investissement et points clés
-- **Pied de page** : Coordonnées CGF GESTION et horodatage
-
-#### Utilisation de l'Export PDF
-
-1. Remplissez les informations commerciales dans la barre latérale (interlocuteur, nom du client, pays)
-2. Effectuez votre simulation
-3. Cliquez sur le bouton **"📥 Générer et télécharger le PDF"**
-4. Le rapport sera généré et téléchargé automatiquement avec un nom unique incluant la date et l'heure
-
-### Envoi par Email
-
-L'application offre également la possibilité d'envoyer les rapports PDF directement par email aux clients.
-
-#### Configuration SMTP (Optionnelle)
-
-Pour activer l'envoi par email, configurez les variables d'environnement suivantes :
-
-```bash
-export SMTP_SERVER="smtp.gmail.com"
-export SMTP_PORT="587"
-export SMTP_USERNAME="votre.email@gmail.com"
-export SMTP_PASSWORD="votre_mot_de_passe_application"
-```
-
-Vous pouvez aussi créer un fichier `.env` à la racine du projet (voir `.env.example`):
-```bash
-cp .env.example .env
-# Puis éditez .env avec vos vraies valeurs
-```
-
-**⚠️ Sécurité** : Ne committez jamais vos identifiants SMTP dans le code source. Le fichier `.env` est automatiquement ignoré par Git. Utilisez des gestionnaires de secrets (comme AWS Secrets Manager, Azure Key Vault) en production.
-
-**📖 Guide complet** : Consultez [CONFIGURATION_EMAIL.md](CONFIGURATION_EMAIL.md) pour un guide détaillé étape par étape avec Gmail.
-
-**Note** : Si vous utilisez Gmail, vous devrez créer un [mot de passe d'application](https://support.google.com/accounts/answer/185833) pour des raisons de sécurité.
-
-#### Utilisation de l'Envoi par Email
-
-1. Configurez les variables d'environnement SMTP (voir ci-dessus)
-2. Effectuez votre simulation
-3. Dans la section "📧 Envoyer par email", saisissez l'adresse email du destinataire
-4. Cliquez sur **"📧 Envoyer le rapport"**
-5. Le rapport PDF sera envoyé avec un email personnalisé incluant un résumé des résultats
-
-**Note** : Si la configuration SMTP n'est pas disponible, vous pouvez toujours télécharger le PDF et l'envoyer manuellement.
-
-### Informations Commerciales
+## Informations Commerciales
 
 Les informations commerciales saisies dans la barre latérale sont :
-- **Automatiquement incluses** dans les rapports PDF générés
 - **Sauvegardées dans la session** pour éviter de les ressaisir
 - **Persistantes** durant toute la navigation dans l'application
 
