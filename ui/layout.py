@@ -12,8 +12,6 @@ from core.config import PRIMARY_COLOR, SECONDARY_COLOR, ACCENT_COLOR
 from core.calculations import calculate_fv, calculate_pmt, calculate_pv, calculate_n_years
 from core.utils import fmt_money
 from ui.charts import create_simulation_chart
-from core.export import create_pdf_report, create_download_link, send_email_with_attachment
-from datetime import datetime
 
 
 def display_results(inputs: dict, calculation_mode: str):
@@ -212,122 +210,6 @@ def display_results(inputs: dict, calculation_mode: str):
         n_years=n_years,
         fv_target=inputs.get("fv")
     )
-
-    st.markdown("---")
-
-    # ----------- BLOC D'EXPORTATION -----------
-    st.markdown(
-        f"""
-        <h3 style="color:{PRIMARY_COLOR};">📤 Exporter le rapport</h3>
-        """,
-        unsafe_allow_html=True
-    )
-
-    # Préparer les informations pour le PDF (utilisé par les deux colonnes)
-    commercial_info = {
-        'date': datetime.now().strftime("%d/%m/%Y"),
-        'interlocuteur': st.session_state.get('interlocuteur', ''),
-        'client_name': st.session_state.get('client_name', ''),
-        'country': st.session_state.get('country', 'Côte d\'Ivoire')
-    }
-    
-    results = {
-        'total_capital': total_capital,
-        'total_invested': total_invested,
-        'total_interest': total_interest
-    }
-    
-    # Créer un dict d'inputs mis à jour avec les valeurs calculées
-    updated_inputs = {
-        'pv': pv,
-        'pmt': pmt,
-        'fv': fv,
-        'rate': rate,
-        'n_years': n_years
-    }
-    
-    # Fonction cachée pour générer le PDF (évite régénération à chaque render)
-    @st.cache_data
-    def generate_pdf_cached(inputs_dict, results_dict, commercial_info_dict):
-        """Génère le PDF avec mise en cache pour performance"""
-        return create_pdf_report(inputs_dict, results_dict, commercial_info_dict)
-    
-    col1, col2 = st.columns([1, 1])
-
-    with col1:
-        # Générer le PDF
-        with st.spinner("Génération du rapport PDF..."):
-            pdf_bytes = generate_pdf_cached(updated_inputs, results, commercial_info)
-            
-            # Créer un nom de fichier unique
-            filename = f"rapport_simulation_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-            
-            # Bouton de téléchargement PDF direct
-            st.download_button(
-                label="📥 Télécharger le rapport PDF",
-                data=pdf_bytes,
-                file_name=filename,
-                mime="application/pdf",
-                type="primary",
-                use_container_width=True
-            )
-
-    with col2:
-        # Formulaire d'envoi par email
-        with st.expander("📧 Envoyer par email", expanded=False):
-            recipient_email = st.text_input(
-                "Email du destinataire",
-                placeholder="exemple@email.com",
-                key="recipient_email"
-            )
-            
-            if st.button("📧 Envoyer le rapport", use_container_width=True):
-                if recipient_email and '@' in recipient_email:
-                    # Générer le PDF (réutilise le cache si disponible)
-                    with st.spinner("Préparation et envoi de l'email..."):
-                        pdf_bytes = generate_pdf_cached(updated_inputs, results, commercial_info)
-                        
-                        # Préparer l'email
-                        client_name = commercial_info.get('client_name', 'Client')
-                        subject = f"CGF GESTION - Rapport de simulation d'investissement - {client_name}"
-                        
-                        body = f"""
-                        <html>
-                        <body style="font-family: Arial, sans-serif;">
-                            <h2 style="color: {PRIMARY_COLOR};">CGF GESTION</h2>
-                            <p>Bonjour,</p>
-                            <p>Veuillez trouver ci-joint votre rapport de simulation d'investissement.</p>
-                            <p><strong>Résumé :</strong></p>
-                            <ul>
-                                <li>Capital Total : {fmt_money(total_capital)}</li>
-                                <li>Capital Investi : {fmt_money(total_invested)}</li>
-                                <li>Intérêts Générés : {fmt_money(total_interest)}</li>
-                            </ul>
-                            <p>Pour toute question, n'hésitez pas à nous contacter.</p>
-                            <p>Cordialement,<br/>
-                            <strong>L'équipe CGF GESTION</strong><br/>
-                            RIVIERA 4, immeuble BRANDON & MCAIN</p>
-                        </body>
-                        </html>
-                        """
-                        
-                        filename = f"rapport_simulation_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-                        
-                        # Envoyer l'email
-                        success, message = send_email_with_attachment(
-                            recipient_email,
-                            subject,
-                            body,
-                            pdf_bytes,
-                            filename
-                        )
-                        
-                        if success:
-                            st.success(message)
-                        else:
-                            st.warning(message)
-                else:
-                    st.error("⚠️ Veuillez entrer une adresse email valide.")
 
 
 def _display_metric_card(label: str, value: str, icon: str, color: str):

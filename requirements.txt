@@ -15,10 +15,3 @@ altair>=5.1.0
 # Images et logos
 Pillow>=10.0.0
 
-# PDF generation
-reportlab>=4.0.0
-matplotlib>=3.7.0
-
-# Email et configuration
-python-dotenv>=1.0.0
-
