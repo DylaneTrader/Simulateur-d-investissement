@@ -23,8 +23,10 @@ def main():
     st.markdown(get_theme_css(), unsafe_allow_html=True)
     
     # ---- Initialize session state for simulation results ----
+    # Using None instead of {} to properly distinguish between "not yet initialized" and "no simulation run"
+    # This ensures pages can accurately detect if a simulation has been performed
     if "simulation_results" not in st.session_state:
-        st.session_state.simulation_results = {}
+        st.session_state.simulation_results = None
 
     # ---- Sidebar ----
     display_sidebar()

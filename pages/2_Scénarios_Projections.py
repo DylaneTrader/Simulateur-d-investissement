@@ -136,8 +136,10 @@ def main():
     display_sidebar()
     
     # ---- Initialize session state for simulation results ----
+    # Using None instead of {} to properly distinguish between "not yet initialized" and "no simulation run"
+    # This ensures we can accurately detect if a simulation has been performed
     if "simulation_results" not in st.session_state:
-        st.session_state.simulation_results = {}
+        st.session_state.simulation_results = None
 
     st.markdown(
         f"""
@@ -156,7 +158,11 @@ def main():
     # RÉCUPÉRATION DES RÉSULTATS DE SIMULATION
     # -------------------------------
     simulation_results = st.session_state.get('simulation_results', None)
-    has_simulation_results = simulation_results is not None and len(simulation_results) > 0
+    has_simulation_results = (
+        simulation_results is not None 
+        and isinstance(simulation_results, dict) 
+        and len(simulation_results) > 0
+    )
     
     # Déterminer les valeurs par défaut
     if has_simulation_results:
@@ -177,26 +183,35 @@ def main():
         default_rate = DEFAULT_ANNUAL_RATE
         default_n_years = DEFAULT_HORIZON_YEARS
         
-        st.warning(
-            "ℹ️ **Aucune simulation détectée.**\n\n"
-            "Vous pouvez utiliser cette page indépendamment en définissant vos propres paramètres, "
-            "ou retourner à la page **Simulation** pour effectuer un calcul d'abord."
+        st.info(
+            "📋 **Aucune simulation détectée.**\n\n"
+            "Cette page utilise des paramètres par défaut. Pour de meilleurs résultats, "
+            "effectuez d'abord une simulation dans la page **Simulation** (menu latéral), "
+            "puis revenez ici pour explorer des scénarios avancés basés sur vos paramètres."
         )
 
     # -------------------------------
     # PARAMÈTRES DE BASE POUR L'ANALYSE
     # -------------------------------
+    st.markdown("---")
     st.markdown(f"### 🎯 Paramètres de base pour les projections")
+    st.markdown(
+        "<p style='color: #666; font-size: 14px; margin-bottom: 15px;'>"
+        "Ajustez ces paramètres pour explorer différents scénarios d'investissement. "
+        "Les analyses ci-dessous s'adapteront automatiquement."
+        "</p>",
+        unsafe_allow_html=True
+    )
     
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        pv = st.number_input("Montant initial (FCFA)", value=default_pv, step=10_000, format="%d", key="proj_pv")
+        pv = st.number_input("💰 Montant initial (FCFA)", value=default_pv, step=10_000, format="%d", key="proj_pv")
     with col2:
-        pmt = st.number_input("Versement mensuel (FCFA)", value=default_pmt, step=5_000, format="%d", key="proj_pmt")
+        pmt = st.number_input("💳 Versement mensuel (FCFA)", value=default_pmt, step=5_000, format="%d", key="proj_pmt")
     with col3:
-        rate = st.number_input("Rendement annuel (%)", value=default_rate, step=0.1, format="%.2f", key="proj_rate")
+        rate = st.number_input("📈 Rendement annuel (%)", value=default_rate, step=0.1, format="%.2f", key="proj_rate")
     with col4:
-        n_years = st.number_input("Horizon (années)", value=default_n_years, step=1, format="%d", min_value=1, key="proj_n_years")
+        n_years = st.number_input("⏱️ Horizon (années)", value=default_n_years, step=1, format="%d", min_value=1, key="proj_n_years")
 
     st.markdown("---")
 
@@ -310,7 +325,11 @@ def main():
         df_r = simulate_rate_sensitivity(pv, pmt, n_years, rates)
         
         # Calculer l'impact en FCFA et en %
-        current_fv = df_r[df_r["Rendement (%)"] == rate]["FV"].iloc[0] if rate in df_r["Rendement (%)"].values else None
+        # Find the closest rate to the current rate (handle floating point precision)
+        rate_rounded = round(rate, 2)
+        matching_rows = df_r[df_r["Rendement (%)"].apply(lambda x: abs(x - rate_rounded) < 0.01)]
+        current_fv = matching_rows["FV"].iloc[0] if len(matching_rows) > 0 else None
+        
         if current_fv:
             df_r["Écart vs Actuel"] = df_r["FV"] - current_fv
             df_r["% Impact"] = (df_r["FV"] / current_fv - 1) * 100
@@ -425,12 +444,24 @@ def main():
             
             if pmt > 0 and best_pmt != pmt:
                 diff_pmt = best_pmt - pmt
-                diff_fv = df_p.loc[best_roi_idx, "FV"] - df_p[df_p["Versement Mensuel"] == pmt]["FV"].iloc[0]
-                st.success(
-                    f"💡 **Opportunité :** En augmentant votre versement mensuel de **{diff_pmt:,.0f} FCFA** "
-                    f"(pour atteindre {best_pmt:,.0f} FCFA), vous pourriez gagner **{diff_fv:,.0f} FCFA** "
-                    f"supplémentaires avec un ROI optimal de {best_roi:.1f}%."
-                )
+                pmt_rows = df_p[df_p["Versement Mensuel"] == pmt]
+                if len(pmt_rows) > 0:
+                    diff_fv = df_p.loc[best_roi_idx, "FV"] - pmt_rows["FV"].iloc[0]
+                    
+                    if diff_pmt > 0:
+                        # Recommandation d'augmentation
+                        st.success(
+                            f"💡 **Opportunité :** En augmentant votre versement mensuel de **{diff_pmt:,.0f} FCFA** "
+                            f"(pour atteindre {best_pmt:,.0f} FCFA), vous pourriez gagner **{diff_fv:,.0f} FCFA** "
+                            f"supplémentaires avec un ROI optimal de {best_roi:.1f}%."
+                        )
+                    else:
+                        # Recommandation de réduction (meilleur ROI avec moins de versement)
+                        st.info(
+                            f"ℹ️ **Insight :** Le meilleur ROI ({best_roi:.1f}%) est atteint avec un versement "
+                            f"mensuel de **{best_pmt:,.0f} FCFA**, inférieur à votre versement actuel. "
+                            f"Cependant, un versement plus élevé génère un capital final plus important."
+                        )
 
     # ============================================================
     # 4) SCÉNARIO DE RETRAITS RÉGULIERS
@@ -526,20 +557,34 @@ def main():
         if final_capital <= 0:
             # Calculer combien de mois le capital peut tenir
             months_sustainable = 0
+            capital_depleted = False
             for idx, row in df_withdrawal[df_withdrawal["Phase"] == "Retrait"].iterrows():
                 if row["Capital"] <= 0:
                     months_sustainable = int(row["Mois"]) - int(accum_years * 12)
+                    capital_depleted = True
                     break
             
-            years_sustainable = months_sustainable / 12
-            st.error(
-                f"⚠️ **Capital épuisé après {years_sustainable:.1f} ans de retraits** "
-                f"(sur {withdrawal_years} ans prévus).\n\n"
-                f"**Recommandations :**\n"
-                f"- Réduire les retraits mensuels à environ {withdrawal_monthly * 0.7:,.0f} FCFA (-30%)\n"
-                f"- Ou augmenter la période d'accumulation de {int((withdrawal_years - years_sustainable) * 1.5)} ans\n"
-                f"- Ou viser un rendement supérieur de {(withdrawal_rate - 4):.1f}% points"
-            )
+            if capital_depleted and months_sustainable > 0:
+                years_sustainable = months_sustainable / 12
+                # Calcul de la différence de rendement nécessaire (toujours positif)
+                rate_diff = abs(withdrawal_rate - 4) if withdrawal_rate > 4 else 4 - withdrawal_rate
+                st.error(
+                    f"⚠️ **Capital épuisé après {years_sustainable:.1f} ans de retraits** "
+                    f"(sur {withdrawal_years} ans prévus).\n\n"
+                    f"**Recommandations :**\n"
+                    f"- Réduire les retraits mensuels à environ {withdrawal_monthly * 0.7:,.0f} FCFA (-30%)\n"
+                    f"- Ou augmenter la période d'accumulation de {int((withdrawal_years - years_sustainable) * 1.5)} ans\n"
+                    f"- Ou viser un rendement supérieur d'au moins {rate_diff:.1f} points de pourcentage"
+                )
+            else:
+                # Capital épuisé immédiatement
+                st.error(
+                    f"⚠️ **Capital insuffisant pour ce scénario de retraits.**\n\n"
+                    f"**Recommandations :**\n"
+                    f"- Augmenter significativement la période d'accumulation\n"
+                    f"- Ou réduire les retraits mensuels à {withdrawal_monthly * 0.5:,.0f} FCFA (-50%)\n"
+                    f"- Ou augmenter les versements mensuels durant l'accumulation"
+                )
         else:
             # Le scénario est viable
             sustainability_ratio = final_capital / accumulated
@@ -563,11 +608,18 @@ def main():
         # Calcul de la "règle des 4%" pour comparaison
         safe_withdrawal = accumulated * 0.04 / 12
         st.markdown("---")
-        st.markdown(
-            f"**📊 Référence - Règle des 4% :** Selon cette règle classique de planification financière, "
-            f"un retrait mensuel sûr serait d'environ **{safe_withdrawal:,.0f} FCFA** "
-            f"({(safe_withdrawal / withdrawal_monthly * 100):.0f}% de votre retrait actuel)."
-        )
+        if withdrawal_monthly > 0:
+            safe_vs_actual = (safe_withdrawal / withdrawal_monthly * 100)
+            st.markdown(
+                f"**📊 Référence - Règle des 4% :** Selon cette règle classique de planification financière, "
+                f"un retrait mensuel sûr serait d'environ **{safe_withdrawal:,.0f} FCFA** "
+                f"({safe_vs_actual:.0f}% de votre retrait actuel)."
+            )
+        else:
+            st.markdown(
+                f"**📊 Référence - Règle des 4% :** Selon cette règle classique de planification financière, "
+                f"un retrait mensuel sûr serait d'environ **{safe_withdrawal:,.0f} FCFA**."
+            )
 
     # ============================================================
     # 5) IMPACT DE L'INFLATION
