@@ -315,7 +315,11 @@ def main():
         df_r = simulate_rate_sensitivity(pv, pmt, n_years, rates)
         
         # Calculer l'impact en FCFA et en %
-        current_fv = df_r[df_r["Rendement (%)"] == rate]["FV"].iloc[0] if rate in df_r["Rendement (%)"].values else None
+        # Find the closest rate to the current rate (handle floating point precision)
+        rate_rounded = round(rate, 2)
+        matching_rows = df_r[df_r["Rendement (%)"].apply(lambda x: abs(x - rate_rounded) < 0.01)]
+        current_fv = matching_rows["FV"].iloc[0] if len(matching_rows) > 0 else None
+        
         if current_fv:
             df_r["Écart vs Actuel"] = df_r["FV"] - current_fv
             df_r["% Impact"] = (df_r["FV"] / current_fv - 1) * 100
@@ -430,12 +434,24 @@ def main():
             
             if pmt > 0 and best_pmt != pmt:
                 diff_pmt = best_pmt - pmt
-                diff_fv = df_p.loc[best_roi_idx, "FV"] - df_p[df_p["Versement Mensuel"] == pmt]["FV"].iloc[0]
-                st.success(
-                    f"💡 **Opportunité :** En augmentant votre versement mensuel de **{diff_pmt:,.0f} FCFA** "
-                    f"(pour atteindre {best_pmt:,.0f} FCFA), vous pourriez gagner **{diff_fv:,.0f} FCFA** "
-                    f"supplémentaires avec un ROI optimal de {best_roi:.1f}%."
-                )
+                pmt_rows = df_p[df_p["Versement Mensuel"] == pmt]
+                if len(pmt_rows) > 0:
+                    diff_fv = df_p.loc[best_roi_idx, "FV"] - pmt_rows["FV"].iloc[0]
+                    
+                    if diff_pmt > 0:
+                        # Recommandation d'augmentation
+                        st.success(
+                            f"💡 **Opportunité :** En augmentant votre versement mensuel de **{diff_pmt:,.0f} FCFA** "
+                            f"(pour atteindre {best_pmt:,.0f} FCFA), vous pourriez gagner **{diff_fv:,.0f} FCFA** "
+                            f"supplémentaires avec un ROI optimal de {best_roi:.1f}%."
+                        )
+                    else:
+                        # Recommandation de réduction (meilleur ROI avec moins de versement)
+                        st.info(
+                            f"ℹ️ **Insight :** Le meilleur ROI ({best_roi:.1f}%) est atteint avec un versement "
+                            f"mensuel de **{best_pmt:,.0f} FCFA**, inférieur à votre versement actuel. "
+                            f"Cependant, un versement plus élevé génère un capital final plus important."
+                        )
 
     # ============================================================
     # 4) SCÉNARIO DE RETRAITS RÉGULIERS
