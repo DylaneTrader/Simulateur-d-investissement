@@ -16,7 +16,17 @@ import altair as alt
 import numpy as np
 
 from ui.sidebar import display_sidebar
-from core.config import get_theme_css, PRIMARY_COLOR, SECONDARY_COLOR, ACCENT_COLOR, APP_NAME
+from core.config import (
+    get_theme_css, 
+    PRIMARY_COLOR, 
+    SECONDARY_COLOR, 
+    ACCENT_COLOR, 
+    APP_NAME,
+    DEFAULT_INITIAL_CAPITAL,
+    DEFAULT_MONTHLY_PAYMENT,
+    DEFAULT_ANNUAL_RATE,
+    DEFAULT_HORIZON_YEARS
+)
 from core.calculations import calculate_fv
 from core.utils import fmt_money
 
@@ -141,13 +151,13 @@ def main():
     
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        pv = st.number_input("Montant initial (FCFA)", value=100_000, step=10_000, format="%d")
+        pv = st.number_input("Montant initial (FCFA)", value=DEFAULT_INITIAL_CAPITAL, step=10_000, format="%d")
     with col2:
-        pmt = st.number_input("Versement mensuel (FCFA)", value=50_000, step=5_000, format="%d")
+        pmt = st.number_input("Versement mensuel (FCFA)", value=DEFAULT_MONTHLY_PAYMENT, step=5_000, format="%d")
     with col3:
-        rate = st.number_input("Rendement annuel (%)", value=5.0, step=0.1, format="%.2f")
+        rate = st.number_input("Rendement annuel (%)", value=DEFAULT_ANNUAL_RATE, step=0.1, format="%.2f")
     with col4:
-        n_years = st.number_input("Horizon (années)", value=10, step=1, format="%d")
+        n_years = st.number_input("Horizon (années)", value=DEFAULT_HORIZON_YEARS, step=1, format="%d")
 
     st.markdown("---")
 
