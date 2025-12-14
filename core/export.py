@@ -101,25 +101,36 @@ def _create_pie_chart(total_invested: float, total_interest: float) -> io.BytesI
     primary_rgb = _hex_to_rgb(PRIMARY_COLOR)
     secondary_rgb = _hex_to_rgb(SECONDARY_COLOR)
     
-    sizes = [total_invested, total_interest]
-    labels = ['Capital Investi', 'Intérêts Générés']
-    colors_pie = [secondary_rgb, primary_rgb]
+    # Handle edge cases where interest might be negative or zero
+    if total_interest < 0:
+        # If interest is negative (loss scenario), show it differently
+        sizes = [total_invested, abs(total_interest)]
+        labels = ['Capital Investi', 'Perte']
+        colors_pie = [secondary_rgb, (0.8, 0.2, 0.2)]  # Red for loss
+    else:
+        sizes = [total_invested, total_interest]
+        labels = ['Capital Investi', 'Intérêts Générés']
+        colors_pie = [secondary_rgb, primary_rgb]
     
-    # Calculer les pourcentages
-    total = total_invested + total_interest
-    percentages = [(s / total * 100) if total > 0 else 0 for s in sizes]
-    
-    # Créer le camembert
-    wedges, texts, autotexts = ax.pie(
-        sizes, 
-        labels=labels, 
-        colors=colors_pie,
-        autopct='%1.1f%%',
-        startangle=90,
-        textprops={'fontsize': 11, 'fontweight': 'bold'}
-    )
-    
-    ax.set_title('Distribution du Capital', fontsize=13, fontweight='bold', color=primary_rgb)
+    # Only create pie chart if we have positive values
+    if all(s >= 0 for s in sizes) and sum(sizes) > 0:
+        # Créer le camembert
+        wedges, texts, autotexts = ax.pie(
+            sizes, 
+            labels=labels, 
+            colors=colors_pie,
+            autopct='%1.1f%%',
+            startangle=90,
+            textprops={'fontsize': 11, 'fontweight': 'bold'}
+        )
+        
+        ax.set_title('Distribution du Capital', fontsize=13, fontweight='bold', color=primary_rgb)
+    else:
+        # Fallback to a simple text display if we can't create a pie chart
+        ax.text(0.5, 0.5, 'Données insuffisantes\npour le graphique', 
+                ha='center', va='center', fontsize=14, transform=ax.transAxes)
+        ax.set_title('Distribution du Capital', fontsize=13, fontweight='bold', color=primary_rgb)
+        ax.axis('off')
     
     plt.tight_layout()
     
