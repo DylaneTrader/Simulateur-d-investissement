@@ -27,6 +27,8 @@ st.set_page_config(
 st.markdown(get_theme_css(), unsafe_allow_html=True)
 
 # Initialize session state for simulation results (shared across all pages)
+# Using None instead of {} to properly distinguish between "not yet initialized" and "no simulation run"
+# This ensures the Scénarios & Projections page can accurately detect if a simulation has been performed
 if "simulation_results" not in st.session_state:
     st.session_state.simulation_results = None
 

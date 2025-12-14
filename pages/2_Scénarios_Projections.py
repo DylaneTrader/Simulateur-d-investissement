@@ -136,7 +136,8 @@ def main():
     display_sidebar()
     
     # ---- Initialize session state for simulation results ----
-    # Use None instead of {} to properly detect absence of simulation
+    # Using None instead of {} to properly distinguish between "not yet initialized" and "no simulation run"
+    # This ensures we can accurately detect if a simulation has been performed
     if "simulation_results" not in st.session_state:
         st.session_state.simulation_results = None
 
