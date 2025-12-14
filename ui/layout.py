@@ -7,11 +7,13 @@
 
 import math
 import streamlit as st
+from datetime import datetime
 
 from core.config import PRIMARY_COLOR, SECONDARY_COLOR, ACCENT_COLOR
 from core.calculations import calculate_fv, calculate_pmt, calculate_pv, calculate_n_years
 from core.utils import fmt_money
 from ui.charts import create_simulation_chart
+from core.export import create_pdf_report, send_email_with_attachment
 
 
 def display_results(inputs: dict, calculation_mode: str):
@@ -210,6 +212,123 @@ def display_results(inputs: dict, calculation_mode: str):
         n_years=n_years,
         fv_target=inputs.get("fv")
     )
+
+    st.markdown("---")
+    
+    # ----------- BLOC D'EXPORTATION -----------
+    st.markdown(
+        f"""
+        <h3 style="color:{PRIMARY_COLOR};">📤 Exporter le rapport</h3>
+        """,
+        unsafe_allow_html=True
+    )
+    
+    # Préparer les données pour l'export
+    updated_inputs = {
+        'pv': pv,
+        'pmt': pmt,
+        'fv': fv,
+        'rate': rate,
+        'n_years': n_years
+    }
+    
+    # Récupérer les informations commerciales depuis session_state
+    commercial_info = {
+        'date': datetime.now().strftime("%d/%m/%Y"),
+        'interlocuteur': st.session_state.get('interlocuteur', ''),
+        'client_name': st.session_state.get('client_name', ''),
+        'country': st.session_state.get('country', '')
+    }
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        # Bouton de téléchargement PDF
+        st.markdown("##### 📥 Télécharger en PDF")
+        
+        # Générer le PDF
+        try:
+            pdf_buffer = create_pdf_report(updated_inputs, calculation_mode, commercial_info)
+            
+            st.download_button(
+                label="📥 Télécharger le rapport PDF",
+                data=pdf_buffer,
+                file_name=f"Simulation_CGF_GESTION_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
+                mime="application/pdf",
+                use_container_width=True
+            )
+            
+        except Exception as e:
+            st.error(f"❌ Erreur lors de la génération du PDF: {str(e)}")
+    
+    with col2:
+        # Section d'envoi par email
+        st.markdown("##### 📧 Envoyer par email")
+        
+        with st.expander("📧 Configurer l'envoi", expanded=False):
+            st.info("💡 L'interlocuteur envoie le rapport au client")
+            
+            # Email de l'interlocuteur (expéditeur)
+            sender_email = st.text_input(
+                "📤 Email de l'interlocuteur (expéditeur)",
+                placeholder="commercial@cgfgestion.com",
+                key="sender_email"
+            )
+            
+            # Email du client (destinataire)
+            recipient_email = st.text_input(
+                "📥 Email du client (destinataire)",
+                placeholder="client@example.com",
+                key="recipient_email"
+            )
+            
+            # Résumé personnalisé (optionnel)
+            custom_summary = st.text_area(
+                "💬 Commentaire personnalisé (optionnel)",
+                placeholder="Ajoutez un message personnalisé pour le client...",
+                height=100,
+                key="custom_summary"
+            )
+            
+            # Bouton d'envoi
+            if st.button("📧 Envoyer le rapport", type="primary", use_container_width=True):
+                if not sender_email or not recipient_email:
+                    st.warning("⚠️ Veuillez renseigner les deux adresses email")
+                else:
+                    # Générer le résumé
+                    if custom_summary:
+                        summary = custom_summary
+                    else:
+                        summary = f"""Résumé de la simulation:
+- Montant Initial: {fmt_money(pv)}
+- Versement Mensuel: {fmt_money(pmt)}
+- Rendement Annuel: {rate:.2f}%
+- Horizon: {n_years:.1f} ans
+- Capital Total Attendu: {fmt_money(total_capital)}
+- Intérêts Générés: {fmt_money(total_interest)}"""
+                    
+                    # Générer le PDF
+                    try:
+                        pdf_buffer = create_pdf_report(updated_inputs, calculation_mode, commercial_info)
+                        
+                        # Envoyer l'email
+                        with st.spinner("📤 Envoi en cours..."):
+                            success, message = send_email_with_attachment(
+                                sender_email=sender_email,
+                                recipient_email=recipient_email,
+                                pdf_buffer=pdf_buffer,
+                                simulation_date=commercial_info['date'],
+                                summary=summary
+                            )
+                        
+                        if success:
+                            st.success(message)
+                        else:
+                            st.error(message)
+                            
+                    except Exception as e:
+                        st.error(f"❌ Erreur: {str(e)}")
+
 
 
 def _display_metric_card(label: str, value: str, icon: str, color: str):
