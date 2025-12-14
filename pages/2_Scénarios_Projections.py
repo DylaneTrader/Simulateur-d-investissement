@@ -182,26 +182,35 @@ def main():
         default_rate = DEFAULT_ANNUAL_RATE
         default_n_years = DEFAULT_HORIZON_YEARS
         
-        st.warning(
-            "ℹ️ **Aucune simulation détectée.**\n\n"
-            "Vous pouvez utiliser cette page indépendamment en définissant vos propres paramètres, "
-            "ou retourner à la page **Simulation** pour effectuer un calcul d'abord."
+        st.info(
+            "📋 **Aucune simulation détectée.**\n\n"
+            "Cette page utilise des paramètres par défaut. Pour de meilleurs résultats, "
+            "effectuez d'abord une simulation dans la page **Simulation** (menu latéral), "
+            "puis revenez ici pour explorer des scénarios avancés basés sur vos paramètres."
         )
 
     # -------------------------------
     # PARAMÈTRES DE BASE POUR L'ANALYSE
     # -------------------------------
+    st.markdown("---")
     st.markdown(f"### 🎯 Paramètres de base pour les projections")
+    st.markdown(
+        "<p style='color: #666; font-size: 14px; margin-bottom: 15px;'>"
+        "Ajustez ces paramètres pour explorer différents scénarios d'investissement. "
+        "Les analyses ci-dessous s'adapteront automatiquement."
+        "</p>",
+        unsafe_allow_html=True
+    )
     
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        pv = st.number_input("Montant initial (FCFA)", value=default_pv, step=10_000, format="%d", key="proj_pv")
+        pv = st.number_input("💰 Montant initial (FCFA)", value=default_pv, step=10_000, format="%d", key="proj_pv")
     with col2:
-        pmt = st.number_input("Versement mensuel (FCFA)", value=default_pmt, step=5_000, format="%d", key="proj_pmt")
+        pmt = st.number_input("💳 Versement mensuel (FCFA)", value=default_pmt, step=5_000, format="%d", key="proj_pmt")
     with col3:
-        rate = st.number_input("Rendement annuel (%)", value=default_rate, step=0.1, format="%.2f", key="proj_rate")
+        rate = st.number_input("📈 Rendement annuel (%)", value=default_rate, step=0.1, format="%.2f", key="proj_rate")
     with col4:
-        n_years = st.number_input("Horizon (années)", value=default_n_years, step=1, format="%d", min_value=1, key="proj_n_years")
+        n_years = st.number_input("⏱️ Horizon (années)", value=default_n_years, step=1, format="%d", min_value=1, key="proj_n_years")
 
     st.markdown("---")
 
