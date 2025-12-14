@@ -73,12 +73,12 @@ L'application s'ouvrira automatiquement dans votre navigateur web.
 L'application comporte plusieurs pages accessibles via le menu latéral :
 - **Accueil** : Page de présentation de l'application
 - **Simulation** : Calculateur d'investissement flexible
-- **Analyse** : Analyses avancées et scénarios de sensibilité
-  - Comparaison par horizon de placement
-  - Analyse de sensibilité aux taux de rendement
-  - Analyse de sensibilité aux versements mensuels
-  - Scénario de retraits réguliers pour planification retraite
-  - Impact de l'inflation sur le pouvoir d'achat
+- **Scénarios & Projections** : Analyses avancées et scénarios de sensibilité
+  - Comparaison intelligente par horizon de placement
+  - Analyse de sensibilité aux taux de rendement avec impacts détaillés
+  - Analyse de sensibilité aux versements mensuels avec ROI
+  - Scénario de retraits réguliers pour planification retraite (avec règle des 4%)
+  - Impact de l'inflation sur le pouvoir d'achat et rendement réel
 
 ## Paramètres de l'Application
 

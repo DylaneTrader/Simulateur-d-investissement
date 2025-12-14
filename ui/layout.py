@@ -29,6 +29,10 @@ def display_results(inputs: dict, calculation_mode: str):
     fv = inputs.get("fv", 0)
     rate = inputs.get("rate", 0)
     n_years = inputs.get("n_years", 0)
+    
+    # Initialize simulation results in session state
+    if "simulation_results" not in st.session_state:
+        st.session_state.simulation_results = {}
 
     # -------- CALCUL DU PARAMÈTRE MANQUANT --------
     calculated_value = None
@@ -74,6 +78,17 @@ def display_results(inputs: dict, calculation_mode: str):
     except Exception as e:
         st.error(f"Erreur lors du calcul : {str(e)}")
         return
+    
+    # Store results in session state for use in other pages
+    st.session_state.simulation_results = {
+        'pv': pv,
+        'pmt': pmt,
+        'fv': fv,
+        'rate': rate,
+        'n_years': n_years,
+        'calculation_mode': calculation_mode,
+        'calculated_value': calculated_value
+    }
 
     # -------- AFFICHAGE DU RÉSULTAT --------
     st.markdown(

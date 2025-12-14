@@ -64,7 +64,7 @@ st.markdown(
     Utilisez le menu de navigation dans la barre latérale pour accéder aux différentes sections :
     
     - **Simulation** : Effectuez vos calculs d'investissement personnalisés
-    - **Analyse** : Explorez des scénarios avancés et analyses de sensibilité
+    - **Scénarios & Projections** : Explorez des scénarios avancés et analyses de sensibilité
     
     ### 📈 Modèle Financier
     
