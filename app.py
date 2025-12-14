@@ -26,6 +26,10 @@ st.set_page_config(
 # Appliquer le thème CSS personnalisé
 st.markdown(get_theme_css(), unsafe_allow_html=True)
 
+# Initialize session state for simulation results (shared across all pages)
+if "simulation_results" not in st.session_state:
+    st.session_state.simulation_results = None
+
 # Afficher la sidebar
 display_sidebar()
 

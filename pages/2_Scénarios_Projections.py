@@ -136,8 +136,9 @@ def main():
     display_sidebar()
     
     # ---- Initialize session state for simulation results ----
+    # Use None instead of {} to properly detect absence of simulation
     if "simulation_results" not in st.session_state:
-        st.session_state.simulation_results = {}
+        st.session_state.simulation_results = None
 
     st.markdown(
         f"""
@@ -156,7 +157,11 @@ def main():
     # RÉCUPÉRATION DES RÉSULTATS DE SIMULATION
     # -------------------------------
     simulation_results = st.session_state.get('simulation_results', None)
-    has_simulation_results = simulation_results is not None and len(simulation_results) > 0
+    has_simulation_results = (
+        simulation_results is not None 
+        and isinstance(simulation_results, dict) 
+        and len(simulation_results) > 0
+    )
     
     # Déterminer les valeurs par défaut
     if has_simulation_results:
@@ -526,20 +531,34 @@ def main():
         if final_capital <= 0:
             # Calculer combien de mois le capital peut tenir
             months_sustainable = 0
+            capital_depleted = False
             for idx, row in df_withdrawal[df_withdrawal["Phase"] == "Retrait"].iterrows():
                 if row["Capital"] <= 0:
                     months_sustainable = int(row["Mois"]) - int(accum_years * 12)
+                    capital_depleted = True
                     break
             
-            years_sustainable = months_sustainable / 12
-            st.error(
-                f"⚠️ **Capital épuisé après {years_sustainable:.1f} ans de retraits** "
-                f"(sur {withdrawal_years} ans prévus).\n\n"
-                f"**Recommandations :**\n"
-                f"- Réduire les retraits mensuels à environ {withdrawal_monthly * 0.7:,.0f} FCFA (-30%)\n"
-                f"- Ou augmenter la période d'accumulation de {int((withdrawal_years - years_sustainable) * 1.5)} ans\n"
-                f"- Ou viser un rendement supérieur de {(withdrawal_rate - 4):.1f}% points"
-            )
+            if capital_depleted and months_sustainable > 0:
+                years_sustainable = months_sustainable / 12
+                # Calcul de la différence de rendement nécessaire (toujours positif)
+                rate_diff = abs(withdrawal_rate - 4) if withdrawal_rate > 4 else 4 - withdrawal_rate
+                st.error(
+                    f"⚠️ **Capital épuisé après {years_sustainable:.1f} ans de retraits** "
+                    f"(sur {withdrawal_years} ans prévus).\n\n"
+                    f"**Recommandations :**\n"
+                    f"- Réduire les retraits mensuels à environ {withdrawal_monthly * 0.7:,.0f} FCFA (-30%)\n"
+                    f"- Ou augmenter la période d'accumulation de {int((withdrawal_years - years_sustainable) * 1.5)} ans\n"
+                    f"- Ou viser un rendement supérieur d'au moins {rate_diff:.1f} points de pourcentage"
+                )
+            else:
+                # Capital épuisé immédiatement
+                st.error(
+                    f"⚠️ **Capital insuffisant pour ce scénario de retraits.**\n\n"
+                    f"**Recommandations :**\n"
+                    f"- Augmenter significativement la période d'accumulation\n"
+                    f"- Ou réduire les retraits mensuels à {withdrawal_monthly * 0.5:,.0f} FCFA (-50%)\n"
+                    f"- Ou augmenter les versements mensuels durant l'accumulation"
+                )
         else:
             # Le scénario est viable
             sustainability_ratio = final_capital / accumulated
@@ -563,11 +582,18 @@ def main():
         # Calcul de la "règle des 4%" pour comparaison
         safe_withdrawal = accumulated * 0.04 / 12
         st.markdown("---")
-        st.markdown(
-            f"**📊 Référence - Règle des 4% :** Selon cette règle classique de planification financière, "
-            f"un retrait mensuel sûr serait d'environ **{safe_withdrawal:,.0f} FCFA** "
-            f"({(safe_withdrawal / withdrawal_monthly * 100):.0f}% de votre retrait actuel)."
-        )
+        if withdrawal_monthly > 0:
+            safe_vs_actual = (safe_withdrawal / withdrawal_monthly * 100)
+            st.markdown(
+                f"**📊 Référence - Règle des 4% :** Selon cette règle classique de planification financière, "
+                f"un retrait mensuel sûr serait d'environ **{safe_withdrawal:,.0f} FCFA** "
+                f"({safe_vs_actual:.0f}% de votre retrait actuel)."
+            )
+        else:
+            st.markdown(
+                f"**📊 Référence - Règle des 4% :** Selon cette règle classique de planification financière, "
+                f"un retrait mensuel sûr serait d'environ **{safe_withdrawal:,.0f} FCFA**."
+            )
 
     # ============================================================
     # 5) IMPACT DE L'INFLATION

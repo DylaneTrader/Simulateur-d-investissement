@@ -23,8 +23,9 @@ def main():
     st.markdown(get_theme_css(), unsafe_allow_html=True)
     
     # ---- Initialize session state for simulation results ----
+    # Use None instead of {} to properly detect absence of simulation
     if "simulation_results" not in st.session_state:
-        st.session_state.simulation_results = {}
+        st.session_state.simulation_results = None
 
     # ---- Sidebar ----
     display_sidebar()
