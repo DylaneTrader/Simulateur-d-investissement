@@ -134,6 +134,10 @@ def main():
     st.set_page_config(page_title="Scénarios & Projections | " + APP_NAME, layout="wide")
     st.markdown(get_theme_css(), unsafe_allow_html=True)
     display_sidebar()
+    
+    # ---- Initialize session state for simulation results ----
+    if "simulation_results" not in st.session_state:
+        st.session_state.simulation_results = {}
 
     st.markdown(
         f"""

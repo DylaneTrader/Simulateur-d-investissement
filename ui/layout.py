@@ -29,10 +29,6 @@ def display_results(inputs: dict, calculation_mode: str):
     fv = inputs.get("fv", 0)
     rate = inputs.get("rate", 0)
     n_years = inputs.get("n_years", 0)
-    
-    # Initialize simulation results in session state
-    if "simulation_results" not in st.session_state:
-        st.session_state.simulation_results = {}
 
     # -------- CALCUL DU PARAMÈTRE MANQUANT --------
     calculated_value = None
