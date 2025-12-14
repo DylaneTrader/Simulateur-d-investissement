@@ -16,7 +16,6 @@ from email.mime.application import MIMEApplication
 import matplotlib
 matplotlib.use('Agg')  # Backend sans interface graphique
 import matplotlib.pyplot as plt
-import pandas as pd
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
