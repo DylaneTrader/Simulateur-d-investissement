@@ -12,7 +12,6 @@
 
 import numpy as np
 import streamlit as st
-from typing import Union
 
 
 class CalculationError(Exception):
@@ -175,7 +174,7 @@ def calculate_pv(fv: float, pmt: float, rate: float, n_years: float) -> float:
 
 
 @st.cache_data
-def calculate_n_years(fv: float, pv: float, pmt: float, rate: float) -> Union[float, type(np.inf)]:
+def calculate_n_years(fv: float, pv: float, pmt: float, rate: float) -> float:
     """
     Calcule le nombre d'années nécessaires pour atteindre FV.
     Utilise une simulation mois par mois (robuste et stable).
@@ -187,12 +186,18 @@ def calculate_n_years(fv: float, pv: float, pmt: float, rate: float) -> Union[fl
         rate: Rendement annuel en %
         
     Returns:
-        Union[float, np.inf]: Nombre d'années nécessaires, ou np.inf si impossible
+        float: Nombre d'années nécessaires, ou np.inf si impossible
         
     Raises:
         CalculationError: Si les paramètres sont invalides
     """
-    validate_inputs(pv, pmt, rate, 10)  # Valide avec n_years=10 par défaut
+    # Valider sans spécifier n_years (car c'est ce qu'on calcule)
+    if pv < 0:
+        raise CalculationError("Le montant initial ne peut pas être négatif")
+    if pmt < 0:
+        raise CalculationError("Le versement mensuel ne peut pas être négatif")
+    if rate < -100:
+        raise CalculationError("Le taux ne peut pas être inférieur à -100%")
     
     if rate == 0:
         if pmt == 0:
