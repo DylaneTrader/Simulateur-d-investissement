@@ -74,6 +74,17 @@ def display_results(inputs: dict, calculation_mode: str):
     except Exception as e:
         st.error(f"Erreur lors du calcul : {str(e)}")
         return
+    
+    # Store results in session state for use in other pages
+    st.session_state.simulation_results = {
+        'pv': pv,
+        'pmt': pmt,
+        'fv': fv,
+        'rate': rate,
+        'n_years': n_years,
+        'calculation_mode': calculation_mode,
+        'calculated_value': calculated_value
+    }
 
     # -------- AFFICHAGE DU RÉSULTAT --------
     st.markdown(

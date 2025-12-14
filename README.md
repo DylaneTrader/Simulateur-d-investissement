@@ -73,12 +73,12 @@ L'application s'ouvrira automatiquement dans votre navigateur web.
 L'application comporte plusieurs pages accessibles via le menu latéral :
 - **Accueil** : Page de présentation de l'application
 - **Simulation** : Calculateur d'investissement flexible
-- **Analyse** : Analyses avancées et scénarios de sensibilité
-  - Comparaison par horizon de placement
-  - Analyse de sensibilité aux taux de rendement
-  - Analyse de sensibilité aux versements mensuels
-  - Scénario de retraits réguliers pour planification retraite
-  - Impact de l'inflation sur le pouvoir d'achat
+- **Scénarios & Projections** : Analyses avancées et scénarios de sensibilité
+  - Comparaison intelligente par horizon de placement
+  - Analyse de sensibilité aux taux de rendement avec impacts détaillés
+  - Analyse de sensibilité aux versements mensuels avec ROI
+  - Scénario de retraits réguliers pour planification retraite (avec règle des 4%)
+  - Impact de l'inflation sur le pouvoir d'achat et rendement réel
 
 ## Paramètres de l'Application
 
@@ -110,7 +110,7 @@ Simulateur-d-investissement/
 │   └── utils.py                 # Utilitaires (formatage monétaire, etc.)
 ├── pages/                       # Pages de l'application Streamlit
 │   ├── 1_Simulation.py          # Page de simulation interactive
-│   └── 2_Analyse.py             # Page d'analyses avancées
+│   └── 2_Scénarios_Projections.py  # Page de scénarios et projections avancées
 └── ui/                          # Composants d'interface utilisateur
     ├── charts.py                # Graphiques et visualisations
     ├── forms.py                 # Formulaires de saisie
@@ -144,10 +144,11 @@ Simulateur-d-investissement/
   - Calcul dynamique du paramètre manquant
   - Affichage des résultats avec graphiques
 
-- **`2_Analyse.py`** : Analyses avancées
-  - Comparaison de plusieurs horizons de placement (5, 10, 15, 20 ans)
-  - Analyse de sensibilité au taux de rendement
-  - Analyse de sensibilité aux versements mensuels
+- **`2_Scénarios_Projections.py`** : Scénarios et projections avancées
+  - Charge automatiquement les paramètres depuis la simulation
+  - Comparaison intelligente par horizon de placement (adaptatif)
+  - Analyse de sensibilité au taux de rendement (avec impact détaillé)
+  - Analyse de sensibilité aux versements mensuels (avec ROI)
   - Scénario de retraits réguliers (phase accumulation + phase retrait)
   - Impact de l'inflation sur la valeur réelle du capital
 

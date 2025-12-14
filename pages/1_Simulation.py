@@ -21,6 +21,10 @@ def main():
     # ---- Configuration générale ----
     st.set_page_config(page_title="Simulation | " + APP_NAME, layout="wide")
     st.markdown(get_theme_css(), unsafe_allow_html=True)
+    
+    # ---- Initialize session state for simulation results ----
+    if "simulation_results" not in st.session_state:
+        st.session_state.simulation_results = {}
 
     # ---- Sidebar ----
     display_sidebar()

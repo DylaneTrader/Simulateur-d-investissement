@@ -1,11 +1,15 @@
-# pages/2_Analyse.py
+# pages/2_Scénarios_Projections.py
 # ------------------------------------------------------------
-# Page d'analyse avancée pour clients expérimentés :
+# Page de scénarios avancés et projections pour clients expérimentés :
 #   - Comparaison plusieurs horizons de placement
 #   - Sensibilité au taux
 #   - Sensibilité aux versements
 #   - Scénarios de retraits réguliers
+#   - Impact de l'inflation
 #   - Analyses et visualisations avancées
+#
+# Cette page peut utiliser les résultats de la simulation ou 
+# fonctionner de manière indépendante avec des paramètres personnalisés.
 #
 # Utilise Altair pour les visualisations.
 # ------------------------------------------------------------
@@ -127,42 +131,77 @@ def simulate_inflation_impact(pv, pmt, rate, n_years, inflation_rate):
 
 
 def main():
-    st.set_page_config(page_title="Analyse | " + APP_NAME, layout="wide")
+    st.set_page_config(page_title="Scénarios & Projections | " + APP_NAME, layout="wide")
     st.markdown(get_theme_css(), unsafe_allow_html=True)
     display_sidebar()
+    
+    # ---- Initialize session state for simulation results ----
+    if "simulation_results" not in st.session_state:
+        st.session_state.simulation_results = {}
 
     st.markdown(
         f"""
-        <h1 style="color:{PRIMARY_COLOR};">📊 Analyse Avancée</h1>
+        <h1 style="color:{PRIMARY_COLOR};">🎯 Scénarios & Projections</h1>
         <p style="font-size: 16px; color: #666;">
-        Section destinée aux clients expérimentés : explorez différents scénarios d'investissement, 
-        de retrait, et analysez l'impact de multiples variables sur votre patrimoine.
+        Explorez différents scénarios d'investissement, analysez l'impact des variations de paramètres, 
+        et planifiez votre stratégie financière à long terme avec des projections détaillées.
         </p>
         """,
         unsafe_allow_html=True
     )
 
     st.markdown("---")
+    
+    # -------------------------------
+    # RÉCUPÉRATION DES RÉSULTATS DE SIMULATION
+    # -------------------------------
+    simulation_results = st.session_state.get('simulation_results', None)
+    has_simulation_results = simulation_results is not None and len(simulation_results) > 0
+    
+    # Déterminer les valeurs par défaut
+    if has_simulation_results:
+        default_pv = int(simulation_results.get('pv', DEFAULT_INITIAL_CAPITAL))
+        default_pmt = int(simulation_results.get('pmt', DEFAULT_MONTHLY_PAYMENT))
+        default_rate = float(simulation_results.get('rate', DEFAULT_ANNUAL_RATE))
+        default_n_years = int(simulation_results.get('n_years', DEFAULT_HORIZON_YEARS))
+        
+        # Afficher un message informatif
+        st.info(
+            f"✅ **Paramètres chargés depuis votre simulation précédente.**\n\n"
+            f"Mode de calcul utilisé : *{simulation_results.get('calculation_mode', 'N/A')}*. "
+            f"Vous pouvez modifier les paramètres ci-dessous pour explorer d'autres scénarios."
+        )
+    else:
+        default_pv = DEFAULT_INITIAL_CAPITAL
+        default_pmt = DEFAULT_MONTHLY_PAYMENT
+        default_rate = DEFAULT_ANNUAL_RATE
+        default_n_years = DEFAULT_HORIZON_YEARS
+        
+        st.warning(
+            "ℹ️ **Aucune simulation détectée.**\n\n"
+            "Vous pouvez utiliser cette page indépendamment en définissant vos propres paramètres, "
+            "ou retourner à la page **Simulation** pour effectuer un calcul d'abord."
+        )
 
     # -------------------------------
     # PARAMÈTRES DE BASE POUR L'ANALYSE
     # -------------------------------
-    st.markdown(f"### 🎯 Paramètres de base")
+    st.markdown(f"### 🎯 Paramètres de base pour les projections")
     
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        pv = st.number_input("Montant initial (FCFA)", value=DEFAULT_INITIAL_CAPITAL, step=10_000, format="%d")
+        pv = st.number_input("Montant initial (FCFA)", value=default_pv, step=10_000, format="%d", key="proj_pv")
     with col2:
-        pmt = st.number_input("Versement mensuel (FCFA)", value=DEFAULT_MONTHLY_PAYMENT, step=5_000, format="%d")
+        pmt = st.number_input("Versement mensuel (FCFA)", value=default_pmt, step=5_000, format="%d", key="proj_pmt")
     with col3:
-        rate = st.number_input("Rendement annuel (%)", value=DEFAULT_ANNUAL_RATE, step=0.1, format="%.2f")
+        rate = st.number_input("Rendement annuel (%)", value=default_rate, step=0.1, format="%.2f", key="proj_rate")
     with col4:
-        n_years = st.number_input("Horizon (années)", value=DEFAULT_HORIZON_YEARS, step=1, format="%d")
+        n_years = st.number_input("Horizon (années)", value=default_n_years, step=1, format="%d", min_value=1, key="proj_n_years")
 
     st.markdown("---")
 
     # ============================================================
-    # 1) COMPARAISON PAR HORIZON
+    # 1) COMPARAISON PAR HORIZON INTELLIGENT
     # ============================================================
     with st.expander("📊 Comparaison par horizon de placement", expanded=True):
         
@@ -172,9 +211,22 @@ def main():
             Plus l'horizon est long, plus l'effet des intérêts composés est significatif.
             """
         )
+        
+        # Générer des horizons adaptés à la valeur actuelle de n_years
+        # On crée une progression intelligente autour de n_years
+        base_horizons = [
+            max(1, n_years // 2),  # La moitié
+            n_years,                # Actuel
+            int(n_years * 1.5),    # 1.5x
+            n_years * 2             # Double
+        ]
+        horizons = sorted(set(base_horizons))  # Enlever les doublons et trier
 
-        horizons = [5, 10, 15, 20]
         df = simulate_series(pv, pmt, rate, horizons)
+        
+        # Calculer les gains additionnels entre chaque horizon
+        df['Gain vs Précédent'] = df['FV'].diff()
+        df['% Croissance'] = df['FV'].pct_change() * 100
 
         chart = (
             alt.Chart(df)
@@ -182,9 +234,13 @@ def main():
             .encode(
                 x=alt.X("Horizon:O", title="Horizon (années)"),
                 y=alt.Y("FV:Q", title="Valeur Future (FCFA)"),
-                color=alt.value(PRIMARY_COLOR),
+                color=alt.condition(
+                    alt.datum.Horizon == n_years,
+                    alt.value(ACCENT_COLOR),  # Couleur différente pour l'horizon actuel
+                    alt.value(PRIMARY_COLOR)
+                ),
                 tooltip=[
-                    alt.Tooltip("Horizon:O"),
+                    alt.Tooltip("Horizon:O", title="Horizon"),
                     alt.Tooltip("FV:Q", format=",.0f", title="Valeur Future")
                 ],
             )
@@ -193,14 +249,31 @@ def main():
 
         st.altair_chart(chart, use_container_width=True)
         
-        # Tableau récapitulatif
-        st.markdown("**📋 Tableau récapitulatif :**")
+        # Tableau récapitulatif amélioré
+        st.markdown("**📋 Tableau récapitulatif détaillé :**")
         df_display = df.copy()
-        df_display["FV"] = df_display["FV"].apply(lambda x: f"{x:,.0f} FCFA")
+        df_display["Valeur Future"] = df_display["FV"].apply(lambda x: f"{x:,.0f} FCFA")
+        df_display["Gain additionnel"] = df_display["Gain vs Précédent"].apply(
+            lambda x: f"{x:,.0f} FCFA" if pd.notna(x) else "—"
+        )
+        df_display["Croissance"] = df_display["% Croissance"].apply(
+            lambda x: f"+{x:.1f}%" if pd.notna(x) else "—"
+        )
+        df_display = df_display[["Horizon", "Valeur Future", "Gain additionnel", "Croissance"]]
         st.dataframe(df_display, use_container_width=True, hide_index=True)
+        
+        # Insight intelligent
+        if len(df) >= 2:
+            doubling_time = horizons[-1] - horizons[0]
+            value_increase = df.iloc[-1]["FV"] / df.iloc[0]["FV"]
+            st.info(
+                f"📈 **Insight :** En passant de {horizons[0]} à {horizons[-1]} ans (+{doubling_time} ans), "
+                f"votre capital est multiplié par **{value_increase:.2f}x**, "
+                f"démontrant la puissance des intérêts composés sur le long terme."
+            )
 
     # ============================================================
-    # 2) SENSIBILITÉ AUX TAUX
+    # 2) SENSIBILITÉ AUX TAUX AMÉLIORÉE
     # ============================================================
     with st.expander("📈 Analyse de sensibilité aux taux de rendement"):
         
@@ -211,10 +284,36 @@ def main():
             surtout sur des horizons longs.
             """
         )
-
-        rates = [rate - 1, rate, rate + 1, rate + 2]
-        rates = [r for r in rates if r > 0]
+        
+        col1, col2 = st.columns([2, 1])
+        with col1:
+            st.markdown("**Plage d'analyse :**")
+        with col2:
+            rate_range = st.slider(
+                "Écart de taux (+/-)",
+                min_value=0.5,
+                max_value=5.0,
+                value=2.0,
+                step=0.5,
+                key="rate_range_slider"
+            )
+        
+        # Générer une plage de taux intelligente
+        rates = [
+            max(0.1, rate - rate_range),
+            max(0.1, rate - rate_range/2),
+            rate,
+            rate + rate_range/2,
+            rate + rate_range
+        ]
+        rates = sorted([round(r, 2) for r in rates])
         df_r = simulate_rate_sensitivity(pv, pmt, n_years, rates)
+        
+        # Calculer l'impact en FCFA et en %
+        current_fv = df_r[df_r["Rendement (%)"] == rate]["FV"].iloc[0] if rate in df_r["Rendement (%)"].values else None
+        if current_fv:
+            df_r["Écart vs Actuel"] = df_r["FV"] - current_fv
+            df_r["% Impact"] = (df_r["FV"] / current_fv - 1) * 100
 
         chart_r = (
             alt.Chart(df_r)
@@ -224,7 +323,7 @@ def main():
                 y=alt.Y("FV:Q", title="Valeur Future (FCFA)"),
                 color=alt.value(SECONDARY_COLOR),
                 tooltip=[
-                    alt.Tooltip("Rendement (%):Q", format=".2f"),
+                    alt.Tooltip("Rendement (%):Q", format=".2f", title="Taux"),
                     alt.Tooltip("FV:Q", format=",.0f", title="Valeur Future"),
                 ],
             )
@@ -232,9 +331,35 @@ def main():
         )
 
         st.altair_chart(chart_r.interactive(), use_container_width=True)
+        
+        # Tableau avec impact détaillé
+        if current_fv:
+            st.markdown("**📋 Impact détaillé par taux :**")
+            df_display = df_r.copy()
+            df_display["Taux"] = df_display["Rendement (%)"].apply(lambda x: f"{x:.2f}%")
+            df_display["Valeur Future"] = df_display["FV"].apply(lambda x: f"{x:,.0f} FCFA")
+            df_display["Écart"] = df_display["Écart vs Actuel"].apply(
+                lambda x: f"{x:+,.0f} FCFA" if pd.notna(x) else "—"
+            )
+            df_display["Impact"] = df_display["% Impact"].apply(
+                lambda x: f"{x:+.1f}%" if pd.notna(x) else "—"
+            )
+            df_display = df_display[["Taux", "Valeur Future", "Écart", "Impact"]]
+            st.dataframe(df_display, use_container_width=True, hide_index=True)
+            
+            # Insight sur la sensibilité
+            min_fv = df_r["FV"].min()
+            max_fv = df_r["FV"].max()
+            fv_variation = max_fv - min_fv
+            st.warning(
+                f"⚠️ **Sensibilité élevée :** Une variation de ±{rate_range}% du taux de rendement "
+                f"peut faire varier votre capital final de **{fv_variation:,.0f} FCFA** "
+                f"({(fv_variation/current_fv*100):.1f}% du montant actuel). "
+                f"Choisissez un placement avec un taux stable et fiable !"
+            )
 
     # ============================================================
-    # 3) SENSIBILITÉ AUX VERSEMENTS
+    # 3) SENSIBILITÉ AUX VERSEMENTS AMÉLIORÉE
     # ============================================================
     with st.expander("💵 Sensibilité aux versements mensuels"):
         
@@ -244,19 +369,35 @@ def main():
             Doubler les versements peut plus que doubler le capital final grâce aux intérêts composés.
             """
         )
-
-        pmt_values = [pmt * x for x in [0.5, 1, 1.5, 2]]
+        
+        # Options de versements intelligentes basées sur le versement actuel
+        if pmt > 0:
+            pmt_multipliers = [0.5, 0.75, 1, 1.25, 1.5, 2]
+            pmt_values = [int(pmt * x) for x in pmt_multipliers]
+        else:
+            # Si pas de versement, proposer des valeurs standards
+            pmt_values = [25_000, 50_000, 75_000, 100_000, 150_000, 200_000]
+        
         df_p = simulate_pmt_sensitivity(pv, rate, n_years, pmt_values)
+        
+        # Calculer le ROI de chaque versement additionnel
+        df_p["Investissement Total"] = pv + df_p["Versement Mensuel"] * n_years * 12
+        df_p["Intérêts Générés"] = df_p["FV"] - df_p["Investissement Total"]
+        df_p["ROI %"] = (df_p["Intérêts Générés"] / df_p["Investissement Total"] * 100)
 
         chart_p = (
             alt.Chart(df_p)
             .mark_bar()
             .encode(
-                x=alt.X("Versement Mensuel:O", title="Versement Mensuel (FCFA)"),
+                x=alt.X("Versement Mensuel:O", title="Versement Mensuel (FCFA)", axis=alt.Axis(labelAngle=-45)),
                 y=alt.Y("FV:Q", title="Valeur Future (FCFA)"),
-                color=alt.value(PRIMARY_COLOR),
+                color=alt.condition(
+                    alt.datum["Versement Mensuel"] == pmt,
+                    alt.value(ACCENT_COLOR),
+                    alt.value(PRIMARY_COLOR)
+                ),
                 tooltip=[
-                    alt.Tooltip("Versement Mensuel:O", format=",.0f"),
+                    alt.Tooltip("Versement Mensuel:O", format=",.0f", title="Versement"),
                     alt.Tooltip("FV:Q", format=",.0f", title="Valeur Future")
                 ],
             )
@@ -264,6 +405,32 @@ def main():
         )
 
         st.altair_chart(chart_p, use_container_width=True)
+        
+        # Tableau détaillé avec ROI
+        st.markdown("**📋 Analyse comparative des versements :**")
+        df_display = df_p.copy()
+        df_display["Versement"] = df_display["Versement Mensuel"].apply(lambda x: f"{x:,.0f} FCFA")
+        df_display["Valeur Finale"] = df_display["FV"].apply(lambda x: f"{x:,.0f} FCFA")
+        df_display["Total Investi"] = df_display["Investissement Total"].apply(lambda x: f"{x:,.0f} FCFA")
+        df_display["Intérêts"] = df_display["Intérêts Générés"].apply(lambda x: f"{x:,.0f} FCFA")
+        df_display["ROI"] = df_display["ROI %"].apply(lambda x: f"{x:.1f}%")
+        df_display = df_display[["Versement", "Valeur Finale", "Total Investi", "Intérêts", "ROI"]]
+        st.dataframe(df_display, use_container_width=True, hide_index=True)
+        
+        # Recommandation intelligente
+        if len(df_p) >= 2:
+            best_roi_idx = df_p["ROI %"].idxmax()
+            best_pmt = df_p.loc[best_roi_idx, "Versement Mensuel"]
+            best_roi = df_p.loc[best_roi_idx, "ROI %"]
+            
+            if pmt > 0 and best_pmt != pmt:
+                diff_pmt = best_pmt - pmt
+                diff_fv = df_p.loc[best_roi_idx, "FV"] - df_p[df_p["Versement Mensuel"] == pmt]["FV"].iloc[0]
+                st.success(
+                    f"💡 **Opportunité :** En augmentant votre versement mensuel de **{diff_pmt:,.0f} FCFA** "
+                    f"(pour atteindre {best_pmt:,.0f} FCFA), vous pourriez gagner **{diff_fv:,.0f} FCFA** "
+                    f"supplémentaires avec un ROI optimal de {best_roi:.1f}%."
+                )
 
     # ============================================================
     # 4) SCÉNARIO DE RETRAITS RÉGULIERS
@@ -336,23 +503,71 @@ def main():
         
         # Métriques importantes
         final_capital = df_withdrawal.iloc[-1]["Capital"]
-        col1, col2, col3 = st.columns(3)
+        total_withdrawals = withdrawal_monthly * withdrawal_years * 12
+        
+        col1, col2, col3, col4 = st.columns(4)
         
         with col1:
             st.metric("Capital accumulé", fmt_money(accumulated))
         with col2:
-            st.metric("Total des retraits", fmt_money(withdrawal_monthly * withdrawal_years * 12))
+            st.metric("Total des retraits", fmt_money(total_withdrawals))
         with col3:
             if final_capital > 0:
                 st.metric("Capital restant", fmt_money(final_capital), delta="✅ Viable")
             else:
                 st.metric("Capital restant", fmt_money(0), delta="⚠️ Épuisé")
+        with col4:
+            # Calculer le taux de retrait annuel
+            withdrawal_rate = (withdrawal_monthly * 12 / accumulated * 100) if accumulated > 0 else 0
+            st.metric("Taux de retrait", f"{withdrawal_rate:.2f}%", 
+                     help="Pourcentage du capital retiré chaque année")
         
+        # Analyse et recommandations intelligentes
         if final_capital <= 0:
-            st.warning(
-                "⚠️ **Attention :** Votre capital sera épuisé avant la fin de la période de retrait. "
-                "Considérez d'augmenter la période d'accumulation, réduire les retraits, ou améliorer le rendement."
+            # Calculer combien de mois le capital peut tenir
+            months_sustainable = 0
+            for idx, row in df_withdrawal[df_withdrawal["Phase"] == "Retrait"].iterrows():
+                if row["Capital"] <= 0:
+                    months_sustainable = int(row["Mois"]) - int(accum_years * 12)
+                    break
+            
+            years_sustainable = months_sustainable / 12
+            st.error(
+                f"⚠️ **Capital épuisé après {years_sustainable:.1f} ans de retraits** "
+                f"(sur {withdrawal_years} ans prévus).\n\n"
+                f"**Recommandations :**\n"
+                f"- Réduire les retraits mensuels à environ {withdrawal_monthly * 0.7:,.0f} FCFA (-30%)\n"
+                f"- Ou augmenter la période d'accumulation de {int((withdrawal_years - years_sustainable) * 1.5)} ans\n"
+                f"- Ou viser un rendement supérieur de {(withdrawal_rate - 4):.1f}% points"
             )
+        else:
+            # Le scénario est viable
+            sustainability_ratio = final_capital / accumulated
+            if sustainability_ratio > 0.5:
+                st.success(
+                    f"✅ **Scénario très viable !** Après {withdrawal_years} ans de retraits, "
+                    f"il vous reste encore {sustainability_ratio*100:.1f}% de votre capital initial. "
+                    f"Vous pourriez augmenter vos retraits mensuels jusqu'à environ {withdrawal_monthly * 1.3:,.0f} FCFA."
+                )
+            elif sustainability_ratio > 0.2:
+                st.info(
+                    f"ℹ️ **Scénario viable.** Votre stratégie est équilibrée avec {sustainability_ratio*100:.1f}% "
+                    f"du capital restant après {withdrawal_years} ans."
+                )
+            else:
+                st.warning(
+                    f"⚠️ **Scénario juste viable.** Seulement {sustainability_ratio*100:.1f}% du capital reste. "
+                    f"Considérez de réduire légèrement les retraits pour plus de sécurité."
+                )
+        
+        # Calcul de la "règle des 4%" pour comparaison
+        safe_withdrawal = accumulated * 0.04 / 12
+        st.markdown("---")
+        st.markdown(
+            f"**📊 Référence - Règle des 4% :** Selon cette règle classique de planification financière, "
+            f"un retrait mensuel sûr serait d'environ **{safe_withdrawal:,.0f} FCFA** "
+            f"({(safe_withdrawal / withdrawal_monthly * 100):.0f}% de votre retrait actuel)."
+        )
 
     # ============================================================
     # 5) IMPACT DE L'INFLATION
