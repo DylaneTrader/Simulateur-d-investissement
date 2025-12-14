@@ -10,7 +10,14 @@
 # ---------------------------------------------------------
 
 import streamlit as st
-from core.config import PRIMARY_COLOR
+from core.config import (
+    PRIMARY_COLOR,
+    DEFAULT_INITIAL_CAPITAL,
+    DEFAULT_MONTHLY_PAYMENT,
+    DEFAULT_TARGET_AMOUNT,
+    DEFAULT_ANNUAL_RATE,
+    DEFAULT_HORIZON_YEARS
+)
 
 
 def parameter_form():
@@ -47,7 +54,7 @@ def parameter_form():
     if calculation_mode != "Montant Final":
         inputs["fv"] = st.number_input(
             "Montant Final (Objectif en FCFA)",
-            value=10_000_000,
+            value=DEFAULT_TARGET_AMOUNT,
             step=100_000,
             format="%d",
         )
@@ -58,7 +65,7 @@ def parameter_form():
     if calculation_mode != "Montant Initial":
         inputs["pv"] = st.number_input(
             "Montant Initial (Capital de départ)",
-            value=100_000,
+            value=DEFAULT_INITIAL_CAPITAL,
             step=10_000,
             format="%d",
         )
@@ -69,7 +76,7 @@ def parameter_form():
     if calculation_mode != "Versement Mensuel":
         inputs["pmt"] = st.number_input(
             "Versement Mensuel (Contribution régulière)",
-            value=50_000,
+            value=DEFAULT_MONTHLY_PAYMENT,
             step=5_000,
             format="%d",
         )
@@ -79,7 +86,7 @@ def parameter_form():
     # RATE
     rate_input = st.number_input(
         "Rendement Annualisé (en %)",
-        value=5.0,
+        value=DEFAULT_ANNUAL_RATE,
         step=0.1,
         format="%.2f",
     )
@@ -90,7 +97,7 @@ def parameter_form():
         inputs["n_years"] = st.number_input(
             "Horizon de Placement (en années)",
             min_value=1,
-            value=5,
+            value=DEFAULT_HORIZON_YEARS,
             step=1,
             format="%d",
         )

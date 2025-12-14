@@ -26,6 +26,36 @@ TEXT_COLOR = "#1f2a33"       # couleur de texte par défaut (suffisamment contra
 CARD_BG = "#ffffff"          # fond des cartes / containers (on reste sobre)
 BORDER_RADIUS = "12px"       # rayon de bord des cartes / boutons
 
+# Default values for calculations
+DEFAULT_INITIAL_CAPITAL = 100_000
+DEFAULT_MONTHLY_PAYMENT = 50_000
+DEFAULT_TARGET_AMOUNT = 10_000_000
+DEFAULT_ANNUAL_RATE = 5.0
+DEFAULT_HORIZON_YEARS = 10
+
+# Constraints
+MIN_RATE = -100
+MAX_RATE = 100
+MIN_HORIZON = 1
+MAX_HORIZON = 100
+
+# UI Configuration
+CHART_HEIGHT = 350
+PIE_CHART_HEIGHT = 400
+EXPANDER_EXPANDED_BY_DEFAULT = True
+
+# Countries for dropdown
+UEMOA_COUNTRIES = [
+    "Côte d'Ivoire",
+    "Bénin",
+    "Burkina Faso",
+    "Guinée-Bissau",
+    "Mali",
+    "Niger",
+    "Sénégal",
+    "Togo"
+]
+
 def get_theme_css() -> str:
     """
     Retourne une chaîne CSS à injecter dans Streamlit via st.markdown(..., unsafe_allow_html=True).

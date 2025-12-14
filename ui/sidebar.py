@@ -14,7 +14,7 @@ import base64
 import io
 from datetime import datetime
 
-from core.config import APP_NAME, PRIMARY_COLOR, SECONDARY_COLOR, ACCENT_COLOR
+from core.config import APP_NAME, PRIMARY_COLOR, SECONDARY_COLOR, ACCENT_COLOR, UEMOA_COUNTRIES
 
 
 def _load_logo_base64(path: str) -> str:
@@ -131,24 +131,13 @@ def display_commercial_info():
     st.sidebar.markdown("**📍 Adresse :** RIVIERA 4, immeuble BRANDON & MCAIN")
     
     # Pays (sélection UEMOA)
-    uemoa_countries = [
-        "Côte d'Ivoire",
-        "Bénin",
-        "Burkina Faso",
-        "Guinée-Bissau",
-        "Mali",
-        "Niger",
-        "Sénégal",
-        "Togo"
-    ]
-    
     if "country" not in st.session_state:
-        st.session_state.country = "Côte d'Ivoire"
+        st.session_state.country = UEMOA_COUNTRIES[0]
     
     country = st.sidebar.selectbox(
         "🌍 Pays",
-        options=uemoa_countries,
-        index=uemoa_countries.index(st.session_state.country) if st.session_state.country in uemoa_countries else 0,
+        options=UEMOA_COUNTRIES,
+        index=UEMOA_COUNTRIES.index(st.session_state.country) if st.session_state.country in UEMOA_COUNTRIES else 0,
         key="country_input"
     )
     st.session_state.country = country
